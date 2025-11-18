@@ -1,13 +1,19 @@
 #!/usr/bin/env python3
 """
 End-to-End Vulnerability Processing Pipeline
-Parse Nessus XML → Classify with CWE/MITRE ATT&CK → Output RL-Ready JSON
+Parse Nessus/Nmap → Classify with CWE/MITRE ATT&CK → Output RL-Ready JSON
 
 Usage:
+    # Nessus workflow (existing)
     python scripts/parse_and_classify.py <nessus_file> [output_file]
+    
+    # Nmap workflows (new)
+    python scripts/parse_and_classify.py --scan-nmap --target <IP> [output_file]
+    python scripts/parse_and_classify.py --nmap-xml <nmap_file> [output_file]
 
 Example:
     python scripts/parse_and_classify.py data/input/scan.nessus data/output/rl_ready.json
+    python scripts/parse_and_classify.py --scan-nmap --target 192.168.79.128 data/output/rl_ready.json
 """
 
 import json
@@ -21,6 +27,9 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from parser.nessus_to_llm import VulnProcessor  # type: ignore
 from classifier.vulnerability_classifier import VulnerabilityClassifier  # type: ignore
+from apfa_agent.core.nmap_scanner import SmartNmapScanner  # type: ignore
+from apfa_agent.utils.scan_adapter import convert_nmap_for_classifier  # type: ignore
+from apfa_agent.utils.nmap_utils import detect_scan_type  # type: ignore
 
 
 def parse_and_classify(
