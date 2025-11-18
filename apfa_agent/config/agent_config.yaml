@@ -1,0 +1,87 @@
+target:
+  ip: "192.168.79.128"
+  description: "Metasploitable 2"
+
+scanning:
+  mode: "auto"  # live | offline | auto
+  nmap_xml: null
+  live_scan:
+    enabled: true
+    arguments: "-sV -sC --top-ports 1000 -T4"
+    output_dir: "data/scans"
+    cache_duration: 3600
+  sudo: false
+
+enrichment:
+  use_nessus: false
+  nessus_file: null
+  use_apfa_classifier: false
+
+agent:
+  model_name: "ppo_metasploitable"
+  learning_rate: 0.0003
+  n_steps: 2048
+  batch_size: 64
+  n_epochs: 10
+  total_timesteps: 100000
+
+llm:
+  # List of models to try (in priority order)
+  models:
+    - name: "local-llama3"
+      provider: "ollama"
+      model: "llama3"
+      endpoint: "http://localhost:11434"
+      temperature: 0.1
+      max_tokens: 1500
+      timeout: 60
+      enabled: true
+    
+    - name: "local-codellama"
+      provider: "ollama"
+      model: "codellama"
+      endpoint: "http://localhost:11434"
+      temperature: 0.2
+      max_tokens: 2000
+      timeout: 90
+      enabled: false
+    
+    - name: "sherlock"
+      provider: "openrouter"
+      model: "openrouter/sherlock-think-alpha"
+      api_key_env: "OPENROUTER_API_KEY"
+      temperature: 0.1
+      max_tokens: 1500
+      timeout: 60
+      enabled: false
+    
+    - name: "longcat-flash-chat"
+      provider: "openrouter"
+      model: "meituan/longcat-flash-chat:free"
+      api_key_env: "OPENROUTER_API_KEY"
+      temperature: 0.1
+      max_tokens: 1500
+      timeout: 60
+      enabled: false
+ 
+  retry:
+    max_failures_per_model: 3
+    rotate_on_failure: true
+    retry_with_error_feedback: true
+    max_retries: 2
+
+execution:
+  mode: "cowboy"
+  timeout: 60
+  max_retries: 2
+
+safety:
+  require_vm: true
+  allowed_targets: ["192.168.79.128"]
+  forbidden_commands:
+    - "rm -rf"
+    - "format"
+    - "del /f"
+    - "dd if="
+    - "mkfs"
+    - "> /dev/sda"
