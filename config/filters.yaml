@@ -1,0 +1,37 @@
+# Example Filter Configuration
+# This demonstrates your use case: exclude CVE, exclude port 80, but include port 80 if network-related
+
+version: "1.0"
+
+# Input/Output
+scan_file: VA_Input/ms2_scan.nessus
+output: VA_Output/filtered.json
+
+# Filters to apply
+filters:
+  # Exclude specific CVE
+  - exclude_cve: CVE-2023-1234
+  
+  # Exclude port 80 with high CVSS (can't disable it)
+  # BUT include it back if it's network infrastructure-related
+  - exclude:
+      ports: [80]
+      min_cvss: 8.0
+      except_if:
+        family: [Network, Firewalls, Routers]
+  
+  # Only process high and critical severity
+  - include:
+      severity: [3, 4]
+      min_cvss: 6.0
+
+# Auto-flag unfixable items
+flags:
+  - name: cant_fix_port80
+    criteria:
+      ports: [80]
+      min_cvss: 8.0
+
+# Export configuration
+export:
+  format: llm  # Options: llm, json, excel, csv

@@ -1,0 +1,3088 @@
+{
+  "metadata": {
+    "source_file": "/home/jay/Auvap/APFA/data/input/ms2_scan.nessus",
+    "processed_at": "2025-11-18T08:47:34.178801Z",
+    "classifier_version": "1.0.0",
+    "total_vulnerabilities": 39,
+    "high_priority_count": 11,
+    "public_exploits_available": 8,
+    "filters_applied": {
+      "severity": "all",
+      "min_cvss": 5.0
+    }
+  },
+  "vulnerabilities": [
+    {
+      "id": "vuln_192.168.79.128_8180_171340",
+      "original": {
+        "id": "vuln_192.168.79.128_8180_171340",
+        "h": "192.168.79.128",
+        "p": 8180,
+        "s": 4,
+        "pn": "Apache Tomcat SEoL (<= 5.5.x)",
+        "c": "",
+        "cvss": 10.0,
+        "d": "According to its version, Apache Tomcat is less than or equal to 5.5.x. It is, therefore, no longer maintained by its vendor or provider.\n\nLack of support implies that no new security patches for the product will be released by the vendor. As a result, it may contain security vulnerabilities.",
+        "sol": "Upgrade to a version of Apache Tomcat that is currently supported."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1035"
+        ],
+        "cwe_names": [
+          "Critical Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "version_detection_and_exploit",
+          "suggested_tools": [
+            "nmap",
+            "searchsploit",
+            "exploit-db",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.175591Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.08
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_8009_134862",
+      "original": {
+        "id": "vuln_192.168.79.128_8009_134862",
+        "h": "192.168.79.128",
+        "p": 8009,
+        "s": 4,
+        "pn": "Apache Tomcat AJP Connector Request Injection (Ghostcat)",
+        "c": "CVE-2020-1745",
+        "cvss": 9.8,
+        "d": "A file read/inclusion vulnerability was found in AJP connector. A  remote, unauthenticated attacker could exploit this vulnerability to read web application files from a vulnerable server. In instances where the vulnerable server allows file uploads, an attacker could upload malicious JavaServer Pages (JSP) code within a variety of file types and gain remote code execution (RCE).",
+        "sol": "Update the AJP configuration to require authorization and/or upgrade the Tomcat server to 7.0.100, 8.5.51, 9.0.31 or later."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-94",
+          "CWE-200"
+        ],
+        "cwe_names": [
+          "Improper Control of Generation of Code",
+          "Exposure of Sensitive Information"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access",
+            "Execution"
+          ],
+          "techniques": [
+            "T1190",
+            "T1059"
+          ]
+        },
+        "confidence": 0.95,
+        "exploitation_assessment": {
+          "difficulty": "Medium",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": true
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "cve_lookup",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.175661Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.05
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_6667_46882",
+      "original": {
+        "id": "vuln_192.168.79.128_6667_46882",
+        "h": "192.168.79.128",
+        "p": 6667,
+        "s": 4,
+        "pn": "UnrealIRCd Backdoor Detection",
+        "c": "CVE-2010-2075",
+        "cvss": 10.0,
+        "d": "The remote IRC server is a version of UnrealIRCd with a backdoor that allows an attacker to execute arbitrary code on the affected host.",
+        "sol": "Re-download the software, verify it using the published MD5 / SHA1 checksums, and re-install it."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-912"
+        ],
+        "cwe_names": [
+          "Hidden Functionality"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Persistence",
+            "Execution"
+          ],
+          "techniques": [
+            "T1554"
+          ]
+        },
+        "confidence": 0.95,
+        "exploitation_assessment": {
+          "difficulty": "Medium",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": true
+        },
+        "rl_agent_hints": {
+          "attack_type": "backdoor_exploitation",
+          "suggested_tools": [
+            "netcat",
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "cve_lookup",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.175693Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.03
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5900_61708",
+      "original": {
+        "id": "vuln_192.168.79.128_5900_61708",
+        "h": "192.168.79.128",
+        "p": 5900,
+        "s": 4,
+        "pn": "VNC Server 'password' Password",
+        "c": "",
+        "cvss": 10.0,
+        "d": "The VNC server running on the remote host is secured with a weak password.  Nessus was able to login using VNC authentication and a password of 'password'.  A remote, unauthenticated attacker could exploit this to take control of the system.",
+        "sol": "Secure the VNC service with a strong password."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1035"
+        ],
+        "cwe_names": [
+          "Critical Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "credential_attack",
+          "suggested_tools": [
+            "hydra",
+            "medusa",
+            "ncrack",
+            "custom_script"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.175743Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.05
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_20007",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_20007",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 4,
+        "pn": "SSL Version 2 and 3 Protocol Detection",
+        "c": "",
+        "cvss": 9.8,
+        "d": "The remote service accepts connections encrypted using SSL 2.0 and/or SSL 3.0. These versions of SSL are affected by several cryptographic flaws, including:\n\n  - An insecure padding scheme with CBC ciphers.\n\n  - Insecure session renegotiation and resumption schemes.\n\nAn attacker can exploit these flaws to conduct man-in-the-middle attacks or to decrypt communications between the affected service and clients.\n\nAlthough SSL/TLS has a secure means for choosing the highest supported version of the protocol (so that these versions will be used only if the client or server support nothing better), many web browsers implement this in an unsafe way that allows an attacker to downgrade a connection (such as in POODLE). Therefore, it is recommended that these protocols be disabled entirely.\n\nNIST has determined that SSL 3.0 is no longer acceptable for secure communications. As of the date of enforcement found in PCI DSS v3.1, any version of SSL will not meet the PCI SSC's definition of 'strong cryptography'.",
+        "sol": "Consult the application's documentation to disable SSL 2.0 and 3.0.\nUse TLS 1.2 (with approved cipher suites) or higher instead."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1035"
+        ],
+        "cwe_names": [
+          "Critical Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "mitm_attack",
+          "suggested_tools": [
+            "sslscan",
+            "testssl.sh",
+            "wireshark",
+            "bettercap"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 9.2904
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.175896Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.15
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_32321",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_32321",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 4,
+        "pn": "Debian OpenSSH/OpenSSL Package Random Number Generator Weakness (SSL check)",
+        "c": "CVE-2008-0166",
+        "cvss": 10.0,
+        "d": "The remote x509 certificate on the remote SSL server has been generated on a Debian or Ubuntu system which contains a bug in the random number generator of its OpenSSL library. \n\nThe problem is due to a Debian packager removing nearly all sources of entropy in the remote version of OpenSSL. \n\nAn attacker can easily obtain the private part of the remote key and use this to decipher the remote session or set up a man in the middle attack.",
+        "sol": "Consider all cryptographic material generated on the remote host to be guessable.  In particuliar, all SSH, SSL and OpenVPN key material should be re-generated."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-338"
+        ],
+        "cwe_names": [
+          "Use of Cryptographically Weak PRNG"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Defense Evasion"
+          ],
+          "techniques": [
+            "T1600"
+          ]
+        },
+        "confidence": 0.95,
+        "exploitation_assessment": {
+          "difficulty": "Medium",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": true
+        },
+        "rl_agent_hints": {
+          "attack_type": "cryptographic_attack",
+          "suggested_tools": [
+            "custom_exploit",
+            "ssh_keygen_audit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "cve_lookup",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.175954Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.06
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_1524_51988",
+      "original": {
+        "id": "vuln_192.168.79.128_1524_51988",
+        "h": "192.168.79.128",
+        "p": 1524,
+        "s": 4,
+        "pn": "Bind Shell Backdoor Detection",
+        "c": "",
+        "cvss": 9.8,
+        "d": "A shell is listening on the remote port without any authentication being required. An attacker may use it by connecting to the remote port and sending commands directly.",
+        "sol": "Verify if the remote host has been compromised, and reinstall the system if necessary."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-912"
+        ],
+        "cwe_names": [
+          "Hidden Functionality"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Persistence",
+            "Execution"
+          ],
+          "techniques": [
+            "T1554",
+            "T1059"
+          ],
+          "technique_names": [
+            "Compromise Client Software Binary",
+            "Command and Scripting Interpreter"
+          ]
+        },
+        "confidence": 0.7,
+        "exploitation_assessment": {
+          "difficulty": "Low",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": true
+        },
+        "rl_agent_hints": {
+          "attack_type": "backdoor_exploitation",
+          "suggested_tools": [
+            "netcat",
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "pattern_match",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.175993Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.04
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_80_201352",
+      "original": {
+        "id": "vuln_192.168.79.128_80_201352",
+        "h": "192.168.79.128",
+        "p": 80,
+        "s": 4,
+        "pn": "Canonical Ubuntu Linux SEoL (8.04.x)",
+        "c": "",
+        "cvss": 10.0,
+        "d": "According to its version, Canonical Ubuntu Linux is 8.04.x. It is, therefore, no longer maintained by its vendor or provider.\n\nLack of support implies that no new security patches for the product will be released by the vendor. As a result, it may contain security vulnerabilities.",
+        "sol": "Upgrade to a version of Canonical Ubuntu Linux that is currently supported."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1035"
+        ],
+        "cwe_names": [
+          "Critical Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "version_detection_and_exploit",
+          "suggested_tools": [
+            "nmap",
+            "searchsploit",
+            "exploit-db",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176046Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.05
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_20007",
+      "original": {
+        "id": "vuln_192.168.79.128_25_20007",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 4,
+        "pn": "SSL Version 2 and 3 Protocol Detection",
+        "c": "",
+        "cvss": 9.8,
+        "d": "The remote service accepts connections encrypted using SSL 2.0 and/or SSL 3.0. These versions of SSL are affected by several cryptographic flaws, including:\n\n  - An insecure padding scheme with CBC ciphers.\n\n  - Insecure session renegotiation and resumption schemes.\n\nAn attacker can exploit these flaws to conduct man-in-the-middle attacks or to decrypt communications between the affected service and clients.\n\nAlthough SSL/TLS has a secure means for choosing the highest supported version of the protocol (so that these versions will be used only if the client or server support nothing better), many web browsers implement this in an unsafe way that allows an attacker to downgrade a connection (such as in POODLE). Therefore, it is recommended that these protocols be disabled entirely.\n\nNIST has determined that SSL 3.0 is no longer acceptable for secure communications. As of the date of enforcement found in PCI DSS v3.1, any version of SSL will not meet the PCI SSC's definition of 'strong cryptography'.",
+        "sol": "Consult the application's documentation to disable SSL 2.0 and 3.0.\nUse TLS 1.2 (with approved cipher suites) or higher instead."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1035"
+        ],
+        "cwe_names": [
+          "Critical Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "mitm_attack",
+          "suggested_tools": [
+            "sslscan",
+            "testssl.sh",
+            "wireshark",
+            "bettercap"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 9.2904
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176188Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.14
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_32321",
+      "original": {
+        "id": "vuln_192.168.79.128_25_32321",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 4,
+        "pn": "Debian OpenSSH/OpenSSL Package Random Number Generator Weakness (SSL check)",
+        "c": "CVE-2008-0166",
+        "cvss": 10.0,
+        "d": "The remote x509 certificate on the remote SSL server has been generated on a Debian or Ubuntu system which contains a bug in the random number generator of its OpenSSL library. \n\nThe problem is due to a Debian packager removing nearly all sources of entropy in the remote version of OpenSSL. \n\nAn attacker can easily obtain the private part of the remote key and use this to decipher the remote session or set up a man in the middle attack.",
+        "sol": "Consider all cryptographic material generated on the remote host to be guessable.  In particuliar, all SSH, SSL and OpenVPN key material should be re-generated."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-338"
+        ],
+        "cwe_names": [
+          "Use of Cryptographically Weak PRNG"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Defense Evasion"
+          ],
+          "techniques": [
+            "T1600"
+          ]
+        },
+        "confidence": 0.95,
+        "exploitation_assessment": {
+          "difficulty": "Medium",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": true
+        },
+        "rl_agent_hints": {
+          "attack_type": "cryptographic_attack",
+          "suggested_tools": [
+            "custom_exploit",
+            "ssh_keygen_audit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "cve_lookup",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176250Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.05
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_22_32314",
+      "original": {
+        "id": "vuln_192.168.79.128_22_32314",
+        "h": "192.168.79.128",
+        "p": 22,
+        "s": 4,
+        "pn": "Debian OpenSSH/OpenSSL Package Random Number Generator Weakness",
+        "c": "CVE-2008-0166",
+        "cvss": 10.0,
+        "d": "The remote SSH host key has been generated on a Debian or Ubuntu system which contains a bug in the random number generator of its OpenSSL library.\n\nThe problem is due to a Debian packager removing nearly all sources of entropy in the remote version of OpenSSL.\n\nAn attacker can easily obtain the private part of the remote key and use this to set up decipher the remote session  or set up a man in the middle attack.",
+        "sol": "Consider all cryptographic material generated on the remote host to be guessable. In particuliar, all SSH, SSL and OpenVPN key material should be re-generated."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-338"
+        ],
+        "cwe_names": [
+          "Use of Cryptographically Weak PRNG"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Defense Evasion"
+          ],
+          "techniques": [
+            "T1600"
+          ]
+        },
+        "confidence": 0.95,
+        "exploitation_assessment": {
+          "difficulty": "Medium",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": true
+        },
+        "rl_agent_hints": {
+          "attack_type": "cryptographic_attack",
+          "suggested_tools": [
+            "custom_exploit",
+            "ssh_keygen_audit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+          "next_steps": [
+            "prioritize_immediate_testing",
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "cve_lookup",
+        "priority_score": 10.0
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176301Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.05
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_42873",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_42873",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 3,
+        "pn": "SSL Medium Strength Cipher Suites Supported (SWEET32)",
+        "c": "CVE-2016-2183",
+        "cvss": 7.5,
+        "d": "The remote host supports the use of SSL ciphers that offer medium strength encryption. Nessus regards medium strength as any encryption that uses key lengths at least 64 bits and less than 112 bits, or else that uses the 3DES encryption suite.\n\nNote that it is considerably easier to circumvent medium strength encryption if the attacker is on the same physical network.",
+        "sol": "Reconfigure the affected application if possible to avoid use of medium strength ciphers."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-699"
+        ],
+        "cwe_names": [
+          "High Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.925
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176368Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.06
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_2049_42256",
+      "original": {
+        "id": "vuln_192.168.79.128_2049_42256",
+        "h": "192.168.79.128",
+        "p": 2049,
+        "s": 3,
+        "pn": "NFS Shares World Readable",
+        "c": "",
+        "cvss": 7.5,
+        "d": "The remote NFS server is exporting one or more shares without restricting access (based on hostname, IP, or IP range).",
+        "sol": "Place the appropriate restrictions on all NFS shares."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-699"
+        ],
+        "cwe_names": [
+          "High Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.925
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176399Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.03
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_445_90509",
+      "original": {
+        "id": "vuln_192.168.79.128_445_90509",
+        "h": "192.168.79.128",
+        "p": 445,
+        "s": 3,
+        "pn": "Samba Badlock Vulnerability",
+        "c": "CVE-2016-2118",
+        "cvss": 7.5,
+        "d": "The version of Samba, a CIFS/SMB server for Linux and Unix, running on the remote host is affected by a flaw, known as Badlock, that exists in the Security Account Manager (SAM) and Local Security Authority (Domain Policy) (LSAD) protocols due to improper authentication level negotiation over Remote Procedure Call (RPC) channels. A man-in-the-middle attacker who is able to able to intercept the traffic between a client and a server hosting a SAM database can exploit this flaw to force a downgrade of the authentication level, which allows the execution of arbitrary Samba network calls in the context of the intercepted user, such as viewing or modifying sensitive security data in the Active Directory (AD) database or disabling critical services.",
+        "sol": "Upgrade to Samba version 4.2.11 / 4.3.8 / 4.4.2 or later."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-699"
+        ],
+        "cwe_names": [
+          "High Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.925
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176505Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.1
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_53_136769",
+      "original": {
+        "id": "vuln_192.168.79.128_53_136769",
+        "h": "192.168.79.128",
+        "p": 53,
+        "s": 3,
+        "pn": "ISC BIND Service Downgrade / Reflected DoS",
+        "c": "CVE-2020-8616",
+        "cvss": 8.6,
+        "d": "According to its self-reported version, the instance of ISC BIND 9 running on the remote name server is affected by performance downgrade and Reflected DoS vulnerabilities. This is due to BIND DNS not sufficiently limiting the number fetches which may be performed while processing a referral response.\n\nAn unauthenticated, remote attacker can exploit this to cause degrade the service of the recursive server or to use the affected server as a reflector in a reflection attack.",
+        "sol": "Upgrade to the ISC BIND version referenced in the vendor advisory."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-699"
+        ],
+        "cwe_names": [
+          "High Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "dos_attack",
+          "suggested_tools": [
+            "hping3",
+            "slowloris",
+            "custom_script"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.435199999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176582Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.07
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_42873",
+      "original": {
+        "id": "vuln_192.168.79.128_25_42873",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 3,
+        "pn": "SSL Medium Strength Cipher Suites Supported (SWEET32)",
+        "c": "CVE-2016-2183",
+        "cvss": 7.5,
+        "d": "The remote host supports the use of SSL ciphers that offer medium strength encryption. Nessus regards medium strength as any encryption that uses key lengths at least 64 bits and less than 112 bits, or else that uses the 3DES encryption suite.\n\nNote that it is considerably easier to circumvent medium strength encryption if the attacker is on the same physical network.",
+        "sol": "Reconfigure the affected application if possible to avoid use of medium strength ciphers."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-699"
+        ],
+        "cwe_names": [
+          "High Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.925
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176645Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.06
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_8180_12085",
+      "original": {
+        "id": "vuln_192.168.79.128_8180_12085",
+        "h": "192.168.79.128",
+        "p": 8180,
+        "s": 2,
+        "pn": "Apache Tomcat Default Files",
+        "c": "",
+        "cvss": 5.3,
+        "d": "The default error page, default index page, example JSPs and/or example servlets are installed on the remote Apache Tomcat server. These files should be removed as they may help an attacker uncover information about the remote Tomcat install or host itself.",
+        "sol": "Delete the default index page and remove the example JSP and servlets. Follow the Tomcat or OWASP instructions to replace or modify the default error page."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.186999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176692Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.04
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_45411",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_45411",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 2,
+        "pn": "SSL Certificate with Wrong Hostname",
+        "c": "",
+        "cvss": 5.3,
+        "d": "The 'commonName' (CN) attribute of the SSL certificate presented for this service is for a different machine.",
+        "sol": "Purchase or generate a proper SSL certificate for this service."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.186999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176722Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.03
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_65821",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_65821",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 2,
+        "pn": "SSL RC4 Cipher Suites Supported (Bar Mitzvah)",
+        "c": "CVE-2013-2566",
+        "cvss": 5.9,
+        "d": "The remote host supports the use of RC4 in one or more cipher suites.\nThe RC4 cipher is flawed in its generation of a pseudo-random stream of bytes so that a wide variety of small biases are introduced into the stream, decreasing its randomness.\n\nIf plaintext is repeatedly encrypted (e.g., HTTP cookies), and an attacker is able to obtain many (i.e., tens of millions) ciphertexts, the attacker may be able to derive the plaintext.",
+        "sol": "Reconfigure the affected application, if possible, to avoid use of RC4 ciphers. Consider using TLS 1.2 with AES-GCM suites subject to browser and web server support."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.661
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176788Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.06
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_104743",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_104743",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 2,
+        "pn": "TLS Version 1.0 Protocol Detection",
+        "c": "",
+        "cvss": 6.5,
+        "d": "The remote service accepts connections encrypted using TLS 1.0. TLS 1.0 has a number of cryptographic design flaws. Modern implementations of TLS 1.0 mitigate these problems, but newer versions of TLS like 1.2 and 1.3 are designed against these flaws and should be used whenever possible.\n\nAs of March 31, 2020, Endpoints that aren\u2019t enabled for TLS 1.2 and higher will no longer function properly with major web browsers and major vendors.\n\nPCI DSS v3.2 requires that TLS 1.0 be disabled entirely by June 30, 2018, except for POS POI terminals (and the SSL/TLS termination points to which they connect) that can be verified as not being susceptible to any known exploits.",
+        "sol": "Enable support for TLS 1.2 and 1.3, and disable support for TLS 1.0."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.135
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176916Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.12
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_57582",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_57582",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 2,
+        "pn": "SSL Self-Signed Certificate",
+        "c": "",
+        "cvss": 6.5,
+        "d": "The X.509 certificate chain for this service is not signed by a recognized certificate authority.  If the remote host is a public host in production, this nullifies the use of SSL as anyone could establish a man-in-the-middle attack against the remote host. \n\nNote that this plugin does not check for certificate chains that end in a certificate that is not self-signed, but is signed by an unrecognized certificate authority.",
+        "sol": "Purchase or generate a proper SSL certificate for this service."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.135
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.176989Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.07
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_51192",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_51192",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 2,
+        "pn": "SSL Certificate Cannot Be Trusted",
+        "c": "",
+        "cvss": 6.5,
+        "d": "The server's X.509 certificate cannot be trusted. This situation can occur in three different ways, in which the chain of trust can be broken, as stated below :\n\n  - First, the top of the certificate chain sent by the     server might not be descended from a known public     certificate authority. This can occur either when the     top of the chain is an unrecognized, self-signed     certificate, or when intermediate certificates are     missing that would connect the top of the certificate     chain to a known public certificate authority.\n\n  - Second, the certificate chain may contain a certificate     that is not valid at the time of the scan. This can     occur either when the scan occurs before one of the     certificate's 'notBefore' dates, or after one of the     certificate's 'notAfter' dates.\n\n  - Third, the certificate chain may contain a signature     that either didn't match the certificate's information     or could not be verified. Bad signatures can be fixed by     getting the certificate with the bad signature to be     re-signed by its issuer. Signatures that could not be     verified are the result of the certificate's issuer     using a signing algorithm that Nessus either does not     support or does not recognize.\n\nIf the remote host is a public host in production, any break in the chain makes it more difficult for users to verify the authenticity and identity of the web server. This could make it easier to carry out man-in-the-middle attacks against the remote host.",
+        "sol": "Purchase or generate a proper SSL certificate for this service."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.135
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177201Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.21
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_5432_15901",
+      "original": {
+        "id": "vuln_192.168.79.128_5432_15901",
+        "h": "192.168.79.128",
+        "p": 5432,
+        "s": 2,
+        "pn": "SSL Certificate Expiry",
+        "c": "",
+        "cvss": 5.3,
+        "d": "This plugin checks expiry dates of certificates associated with SSL- enabled services on the target and reports whether any have already expired.",
+        "sol": "Purchase or generate a new SSL certificate to replace the existing one."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.186999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177235Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.03
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_445_57608",
+      "original": {
+        "id": "vuln_192.168.79.128_445_57608",
+        "h": "192.168.79.128",
+        "p": 445,
+        "s": 2,
+        "pn": "SMB Signing not required",
+        "c": "",
+        "cvss": 5.3,
+        "d": "Signing is not required on the remote SMB server. An unauthenticated, remote attacker can exploit this to conduct man-in-the-middle attacks against the SMB server.",
+        "sol": "Enforce message signing in the host's configuration. On Windows, this is found in the policy setting 'Microsoft network server: Digitally sign communications (always)'. On Samba, the setting is called 'server signing'. See the 'see also' links for further details."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.186999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177272Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.03
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_80_11213",
+      "original": {
+        "id": "vuln_192.168.79.128_80_11213",
+        "h": "192.168.79.128",
+        "p": 80,
+        "s": 2,
+        "pn": "HTTP TRACE / TRACK Methods Allowed",
+        "c": "CVE-2003-1567",
+        "cvss": 5.3,
+        "d": "The remote web server supports the TRACE and/or TRACK methods. TRACE and TRACK are HTTP methods that are used to debug web server connections.",
+        "sol": "Disable these HTTP methods. Refer to the plugin output for more information."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.186999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177308Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.03
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_53_33447",
+      "original": {
+        "id": "vuln_192.168.79.128_53_33447",
+        "h": "192.168.79.128",
+        "p": 53,
+        "s": 2,
+        "pn": "Multiple Vendor DNS Query ID Field Prediction Cache Poisoning",
+        "c": "CVE-2008-1447",
+        "cvss": 6.8,
+        "d": "The remote DNS resolver does not use random ports when making queries to third-party DNS servers. An unauthenticated, remote attacker can exploit this to poison the remote DNS server, allowing the attacker to divert legitimate traffic to arbitrary sites.",
+        "sol": "Contact your DNS server vendor for a patch."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.371999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177357Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.05
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_53_139915",
+      "original": {
+        "id": "vuln_192.168.79.128_53_139915",
+        "h": "192.168.79.128",
+        "p": 53,
+        "s": 2,
+        "pn": "ISC BIND 9.x < 9.11.22, 9.12.x < 9.16.6, 9.17.x < 9.17.4 DoS",
+        "c": "CVE-2020-8622",
+        "cvss": 6.5,
+        "d": "According to its self-reported version number, the installation of ISC BIND running on the remote name server is version 9.x prior to 9.11.22, 9.12.x prior to 9.16.6 or 9.17.x prior to 9.17.4. It is, therefore, affected by a denial of service (DoS) vulnerability due to an assertion failure when attempting to verify a truncated response to a TSIG-signed request. An authenticated, remote attacker can exploit this issue by sending a truncated response to a TSIG-signed request to trigger an assertion failure, causing the server to exit.\n\nNote that Nessus has not tested for this issue but has instead relied only on the application's self-reported version   number.",
+        "sol": "Upgrade to BIND 9.11.22, 9.16.6, 9.17.4 or later."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-400",
+          "CWE-770"
+        ],
+        "cwe_names": [
+          "Uncontrolled Resource Consumption",
+          "Allocation of Resources Without Limits or Throttling"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Impact"
+          ],
+          "techniques": [
+            "T1498",
+            "T1499"
+          ],
+          "technique_names": [
+            "Network Denial of Service",
+            "Endpoint Denial of Service"
+          ]
+        },
+        "confidence": 0.7,
+        "exploitation_assessment": {
+          "difficulty": "Low",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": true
+        },
+        "rl_agent_hints": {
+          "attack_type": "dos_attack",
+          "suggested_tools": [
+            "hping3",
+            "slowloris",
+            "custom_script"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "pattern_match",
+        "priority_score": 5.824
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177463Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.1
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_53_136808",
+      "original": {
+        "id": "vuln_192.168.79.128_53_136808",
+        "h": "192.168.79.128",
+        "p": 53,
+        "s": 2,
+        "pn": "ISC BIND Denial of Service",
+        "c": "CVE-2020-8617",
+        "cvss": 5.9,
+        "d": "A denial of service (DoS) vulnerability exists in ISC BIND versions 9.11.18 / 9.11.18-S1 / 9.12.4-P2 / 9.13 / 9.14.11 / 9.15 / 9.16.2 / 9.17 / 9.17.1 and earlier. An unauthenticated, remote attacker can exploit this issue, via a specially-crafted message, to cause the service to stop responding.\n\nNote that Nessus has not tested for this issue but has instead relied only on the application's self-reported version number.",
+        "sol": "Upgrade to the patched release most closely related to your current version of BIND."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-400",
+          "CWE-770"
+        ],
+        "cwe_names": [
+          "Uncontrolled Resource Consumption",
+          "Allocation of Resources Without Limits or Throttling"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Impact"
+          ],
+          "techniques": [
+            "T1498",
+            "T1499"
+          ],
+          "technique_names": [
+            "Network Denial of Service",
+            "Endpoint Denial of Service"
+          ]
+        },
+        "confidence": 0.7,
+        "exploitation_assessment": {
+          "difficulty": "Low",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": true
+        },
+        "rl_agent_hints": {
+          "attack_type": "dos_attack",
+          "suggested_tools": [
+            "hping3",
+            "slowloris",
+            "custom_script"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "pattern_match",
+        "priority_score": 5.3872
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177562Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.09
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_53_12217",
+      "original": {
+        "id": "vuln_192.168.79.128_53_12217",
+        "h": "192.168.79.128",
+        "p": 53,
+        "s": 2,
+        "pn": "DNS Server Cache Snooping Remote Information Disclosure",
+        "c": "",
+        "cvss": 5.3,
+        "d": "The remote DNS server responds to queries for third-party domains that do not have the recursion bit set. \n\nThis may allow a remote attacker to determine which domains have recently been resolved via this name server, and therefore which hosts have been recently visited. \n\nFor instance, if an attacker was interested in whether your company utilizes the online services of a particular financial institution, they would be able to use this attack to build a statistical model regarding company usage of that financial institution.  Of course, the attack can also be used to find B2B partners, web-surfing patterns, external mail servers, and more.\n\nNote: If this is an internal DNS server not accessible to outside networks, attacks would be limited to the internal network. This may include employees, consultants and potentially users on a guest network or WiFi connection if supported.",
+        "sol": "Contact the vendor of the DNS software for a fix."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "file_disclosure",
+          "suggested_tools": [
+            "burp_suite",
+            "dirb",
+            "custom_script"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 6.699199999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177716Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.15
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_45411",
+      "original": {
+        "id": "vuln_192.168.79.128_25_45411",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "SSL Certificate with Wrong Hostname",
+        "c": "",
+        "cvss": 5.3,
+        "d": "The 'commonName' (CN) attribute of the SSL certificate presented for this service is for a different machine.",
+        "sol": "Purchase or generate a proper SSL certificate for this service."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.186999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177752Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.03
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_31705",
+      "original": {
+        "id": "vuln_192.168.79.128_25_31705",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "SSL Anonymous Cipher Suites Supported",
+        "c": "CVE-2007-1858",
+        "cvss": 5.9,
+        "d": "The remote host supports the use of anonymous SSL ciphers. While this enables an administrator to set up a service that encrypts traffic without having to generate and configure SSL certificates, it offers no way to verify the remote host's identity and renders the service vulnerable to a man-in-the-middle attack.\n\nNote: This is considerably easier to exploit if the attacker is on the same physical network.",
+        "sol": "Reconfigure the affected application if possible to avoid use of weak ciphers."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.661
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177821Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.07
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_89058",
+      "original": {
+        "id": "vuln_192.168.79.128_25_89058",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "SSL DROWN Attack Vulnerability (Decrypting RSA with Obsolete and Weakened eNcryption)",
+        "c": "CVE-2016-0800",
+        "cvss": 5.9,
+        "d": "The remote host supports SSLv2 and therefore may be affected by a vulnerability that allows a cross-protocol Bleichenbacher padding oracle attack known as DROWN (Decrypting RSA with Obsolete and Weakened eNcryption). This vulnerability exists due to a flaw in the Secure Sockets Layer Version 2 (SSLv2) implementation, and it allows captured TLS traffic to be decrypted. A man-in-the-middle attacker can exploit this to decrypt the TLS connection by utilizing previously captured traffic and weak cryptography along with a series of specially crafted connections to an SSLv2 server that uses the same private key.",
+        "sol": "Disable SSLv2 and export grade cryptography cipher suites. Ensure that private keys are not used anywhere with server software that supports SSLv2 connections."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.661
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177920Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.1
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_65821",
+      "original": {
+        "id": "vuln_192.168.79.128_25_65821",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "SSL RC4 Cipher Suites Supported (Bar Mitzvah)",
+        "c": "CVE-2013-2566",
+        "cvss": 5.9,
+        "d": "The remote host supports the use of RC4 in one or more cipher suites.\nThe RC4 cipher is flawed in its generation of a pseudo-random stream of bytes so that a wide variety of small biases are introduced into the stream, decreasing its randomness.\n\nIf plaintext is repeatedly encrypted (e.g., HTTP cookies), and an attacker is able to obtain many (i.e., tens of millions) ciphertexts, the attacker may be able to derive the plaintext.",
+        "sol": "Reconfigure the affected application, if possible, to avoid use of RC4 ciphers. Consider using TLS 1.2 with AES-GCM suites subject to browser and web server support."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.661
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.177992Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.07
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_26928",
+      "original": {
+        "id": "vuln_192.168.79.128_25_26928",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "SSL Weak Cipher Suites Supported",
+        "c": "",
+        "cvss": 5.3,
+        "d": "The remote host supports the use of SSL ciphers that offer weak encryption.\n\nNote: This is considerably easier to exploit if the attacker is on the same physical network.",
+        "sol": "Reconfigure the affected application, if possible to avoid the use of weak ciphers."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "mitm_attack",
+          "suggested_tools": [
+            "sslscan",
+            "testssl.sh",
+            "wireshark",
+            "bettercap"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.024399999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.178033Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.04
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_104743",
+      "original": {
+        "id": "vuln_192.168.79.128_25_104743",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "TLS Version 1.0 Protocol Detection",
+        "c": "",
+        "cvss": 6.5,
+        "d": "The remote service accepts connections encrypted using TLS 1.0. TLS 1.0 has a number of cryptographic design flaws. Modern implementations of TLS 1.0 mitigate these problems, but newer versions of TLS like 1.2 and 1.3 are designed against these flaws and should be used whenever possible.\n\nAs of March 31, 2020, Endpoints that aren\u2019t enabled for TLS 1.2 and higher will no longer function properly with major web browsers and major vendors.\n\nPCI DSS v3.2 requires that TLS 1.0 be disabled entirely by June 30, 2018, except for POS POI terminals (and the SSL/TLS termination points to which they connect) that can be verified as not being susceptible to any known exploits.",
+        "sol": "Enable support for TLS 1.2 and 1.3, and disable support for TLS 1.0."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.135
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.178135Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.1
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_57582",
+      "original": {
+        "id": "vuln_192.168.79.128_25_57582",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "SSL Self-Signed Certificate",
+        "c": "",
+        "cvss": 6.5,
+        "d": "The X.509 certificate chain for this service is not signed by a recognized certificate authority.  If the remote host is a public host in production, this nullifies the use of SSL as anyone could establish a man-in-the-middle attack against the remote host. \n\nNote that this plugin does not check for certificate chains that end in a certificate that is not self-signed, but is signed by an unrecognized certificate authority.",
+        "sol": "Purchase or generate a proper SSL certificate for this service."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.135
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.178201Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.06
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_51192",
+      "original": {
+        "id": "vuln_192.168.79.128_25_51192",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "SSL Certificate Cannot Be Trusted",
+        "c": "",
+        "cvss": 6.5,
+        "d": "The server's X.509 certificate cannot be trusted. This situation can occur in three different ways, in which the chain of trust can be broken, as stated below :\n\n  - First, the top of the certificate chain sent by the     server might not be descended from a known public     certificate authority. This can occur either when the     top of the chain is an unrecognized, self-signed     certificate, or when intermediate certificates are     missing that would connect the top of the certificate     chain to a known public certificate authority.\n\n  - Second, the certificate chain may contain a certificate     that is not valid at the time of the scan. This can     occur either when the scan occurs before one of the     certificate's 'notBefore' dates, or after one of the     certificate's 'notAfter' dates.\n\n  - Third, the certificate chain may contain a signature     that either didn't match the certificate's information     or could not be verified. Bad signatures can be fixed by     getting the certificate with the bad signature to be     re-signed by its issuer. Signatures that could not be     verified are the result of the certificate's issuer     using a signing algorithm that Nessus either does not     support or does not recognize.\n\nIf the remote host is a public host in production, any break in the chain makes it more difficult for users to verify the authenticity and identity of the web server. This could make it easier to carry out man-in-the-middle attacks against the remote host.",
+        "sol": "Purchase or generate a proper SSL certificate for this service."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 5.135
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.178415Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.21
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_25_15901",
+      "original": {
+        "id": "vuln_192.168.79.128_25_15901",
+        "h": "192.168.79.128",
+        "p": 25,
+        "s": 2,
+        "pn": "SSL Certificate Expiry",
+        "c": "",
+        "cvss": 5.3,
+        "d": "This plugin checks expiry dates of certificates associated with SSL- enabled services on the target and reports whether any have already expired.",
+        "sol": "Purchase or generate a new SSL certificate to replace the existing one."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "generic_exploitation",
+          "suggested_tools": [
+            "nmap",
+            "metasploit"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 4.186999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.178446Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.03
+      }
+    },
+    {
+      "id": "vuln_192.168.79.128_23_42263",
+      "original": {
+        "id": "vuln_192.168.79.128_23_42263",
+        "h": "192.168.79.128",
+        "p": 23,
+        "s": 2,
+        "pn": "Unencrypted Telnet Server",
+        "c": "",
+        "cvss": 6.5,
+        "d": "The remote host is running a Telnet server over an unencrypted channel.\n\nUsing Telnet over an unencrypted channel is not recommended as logins, passwords, and commands are transferred in cleartext. This allows a remote, man-in-the-middle attacker to eavesdrop on a Telnet session to obtain credentials or other sensitive information and to modify traffic exchanged between a client and server.\n\nSSH is preferred over Telnet since it protects credentials from eavesdropping and can tunnel additional data streams such as an X11 session.",
+        "sol": "Disable the Telnet service and use SSH instead."
+      },
+      "classification": {
+        "cwe": [
+          "CWE-1008"
+        ],
+        "cwe_names": [
+          "Medium/Low Severity Weakness"
+        ],
+        "mitre_attack": {
+          "tactics": [
+            "Initial Access"
+          ],
+          "techniques": [
+            "T1190"
+          ],
+          "technique_names": [
+            "Exploit Public-Facing Application"
+          ]
+        },
+        "confidence": 0.3,
+        "exploitation_assessment": {
+          "difficulty": "Unknown",
+          "attack_vector": "Network",
+          "requires_auth": false,
+          "publicly_available_exploit": false
+        },
+        "rl_agent_hints": {
+          "attack_type": "information_gathering",
+          "suggested_tools": [
+            "curl",
+            "wget",
+            "burp_suite",
+            "nmap"
+          ],
+          "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+          "expected_impact": "Potential system compromise",
+          "next_steps": [
+            "enumerate_version",
+            "search_exploits",
+            "test_exploit"
+          ]
+        },
+        "categorization_source": "generic_fallback",
+        "priority_score": 7.188999999999999
+      },
+      "metadata": {
+        "classified_at": "2025-11-18T08:47:34.178538Z",
+        "classifier_version": "1.0.0",
+        "processing_time_ms": 0.09
+      }
+    }
+  ],
+  "rl_agent_summary": {
+    "prioritized_targets": [
+      {
+        "id": "vuln_192.168.79.128_8180_171340",
+        "original": {
+          "id": "vuln_192.168.79.128_8180_171340",
+          "h": "192.168.79.128",
+          "p": 8180,
+          "s": 4,
+          "pn": "Apache Tomcat SEoL (<= 5.5.x)",
+          "c": "",
+          "cvss": 10.0,
+          "d": "According to its version, Apache Tomcat is less than or equal to 5.5.x. It is, therefore, no longer maintained by its vendor or provider.\n\nLack of support implies that no new security patches for the product will be released by the vendor. As a result, it may contain security vulnerabilities.",
+          "sol": "Upgrade to a version of Apache Tomcat that is currently supported."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-1035"
+          ],
+          "cwe_names": [
+            "Critical Weakness"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Initial Access"
+            ],
+            "techniques": [
+              "T1190"
+            ],
+            "technique_names": [
+              "Exploit Public-Facing Application"
+            ]
+          },
+          "confidence": 0.3,
+          "exploitation_assessment": {
+            "difficulty": "Unknown",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": false
+          },
+          "rl_agent_hints": {
+            "attack_type": "version_detection_and_exploit",
+            "suggested_tools": [
+              "nmap",
+              "searchsploit",
+              "exploit-db",
+              "metasploit"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "generic_fallback",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.175591Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.08
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_8009_134862",
+        "original": {
+          "id": "vuln_192.168.79.128_8009_134862",
+          "h": "192.168.79.128",
+          "p": 8009,
+          "s": 4,
+          "pn": "Apache Tomcat AJP Connector Request Injection (Ghostcat)",
+          "c": "CVE-2020-1745",
+          "cvss": 9.8,
+          "d": "A file read/inclusion vulnerability was found in AJP connector. A  remote, unauthenticated attacker could exploit this vulnerability to read web application files from a vulnerable server. In instances where the vulnerable server allows file uploads, an attacker could upload malicious JavaServer Pages (JSP) code within a variety of file types and gain remote code execution (RCE).",
+          "sol": "Update the AJP configuration to require authorization and/or upgrade the Tomcat server to 7.0.100, 8.5.51, 9.0.31 or later."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-94",
+            "CWE-200"
+          ],
+          "cwe_names": [
+            "Improper Control of Generation of Code",
+            "Exposure of Sensitive Information"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Initial Access",
+              "Execution"
+            ],
+            "techniques": [
+              "T1190",
+              "T1059"
+            ]
+          },
+          "confidence": 0.95,
+          "exploitation_assessment": {
+            "difficulty": "Medium",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": true
+          },
+          "rl_agent_hints": {
+            "attack_type": "generic_exploitation",
+            "suggested_tools": [
+              "nmap",
+              "metasploit"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "cve_lookup",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.175661Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.05
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_6667_46882",
+        "original": {
+          "id": "vuln_192.168.79.128_6667_46882",
+          "h": "192.168.79.128",
+          "p": 6667,
+          "s": 4,
+          "pn": "UnrealIRCd Backdoor Detection",
+          "c": "CVE-2010-2075",
+          "cvss": 10.0,
+          "d": "The remote IRC server is a version of UnrealIRCd with a backdoor that allows an attacker to execute arbitrary code on the affected host.",
+          "sol": "Re-download the software, verify it using the published MD5 / SHA1 checksums, and re-install it."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-912"
+          ],
+          "cwe_names": [
+            "Hidden Functionality"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Persistence",
+              "Execution"
+            ],
+            "techniques": [
+              "T1554"
+            ]
+          },
+          "confidence": 0.95,
+          "exploitation_assessment": {
+            "difficulty": "Medium",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": true
+          },
+          "rl_agent_hints": {
+            "attack_type": "backdoor_exploitation",
+            "suggested_tools": [
+              "netcat",
+              "nmap",
+              "metasploit"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "cve_lookup",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.175693Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.03
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_5900_61708",
+        "original": {
+          "id": "vuln_192.168.79.128_5900_61708",
+          "h": "192.168.79.128",
+          "p": 5900,
+          "s": 4,
+          "pn": "VNC Server 'password' Password",
+          "c": "",
+          "cvss": 10.0,
+          "d": "The VNC server running on the remote host is secured with a weak password.  Nessus was able to login using VNC authentication and a password of 'password'.  A remote, unauthenticated attacker could exploit this to take control of the system.",
+          "sol": "Secure the VNC service with a strong password."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-1035"
+          ],
+          "cwe_names": [
+            "Critical Weakness"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Initial Access"
+            ],
+            "techniques": [
+              "T1190"
+            ],
+            "technique_names": [
+              "Exploit Public-Facing Application"
+            ]
+          },
+          "confidence": 0.3,
+          "exploitation_assessment": {
+            "difficulty": "Unknown",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": false
+          },
+          "rl_agent_hints": {
+            "attack_type": "credential_attack",
+            "suggested_tools": [
+              "hydra",
+              "medusa",
+              "ncrack",
+              "custom_script"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "generic_fallback",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.175743Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.05
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_5432_32321",
+        "original": {
+          "id": "vuln_192.168.79.128_5432_32321",
+          "h": "192.168.79.128",
+          "p": 5432,
+          "s": 4,
+          "pn": "Debian OpenSSH/OpenSSL Package Random Number Generator Weakness (SSL check)",
+          "c": "CVE-2008-0166",
+          "cvss": 10.0,
+          "d": "The remote x509 certificate on the remote SSL server has been generated on a Debian or Ubuntu system which contains a bug in the random number generator of its OpenSSL library. \n\nThe problem is due to a Debian packager removing nearly all sources of entropy in the remote version of OpenSSL. \n\nAn attacker can easily obtain the private part of the remote key and use this to decipher the remote session or set up a man in the middle attack.",
+          "sol": "Consider all cryptographic material generated on the remote host to be guessable.  In particuliar, all SSH, SSL and OpenVPN key material should be re-generated."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-338"
+          ],
+          "cwe_names": [
+            "Use of Cryptographically Weak PRNG"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Defense Evasion"
+            ],
+            "techniques": [
+              "T1600"
+            ]
+          },
+          "confidence": 0.95,
+          "exploitation_assessment": {
+            "difficulty": "Medium",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": true
+          },
+          "rl_agent_hints": {
+            "attack_type": "cryptographic_attack",
+            "suggested_tools": [
+              "custom_exploit",
+              "ssh_keygen_audit"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "cve_lookup",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.175954Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.06
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_1524_51988",
+        "original": {
+          "id": "vuln_192.168.79.128_1524_51988",
+          "h": "192.168.79.128",
+          "p": 1524,
+          "s": 4,
+          "pn": "Bind Shell Backdoor Detection",
+          "c": "",
+          "cvss": 9.8,
+          "d": "A shell is listening on the remote port without any authentication being required. An attacker may use it by connecting to the remote port and sending commands directly.",
+          "sol": "Verify if the remote host has been compromised, and reinstall the system if necessary."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-912"
+          ],
+          "cwe_names": [
+            "Hidden Functionality"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Persistence",
+              "Execution"
+            ],
+            "techniques": [
+              "T1554",
+              "T1059"
+            ],
+            "technique_names": [
+              "Compromise Client Software Binary",
+              "Command and Scripting Interpreter"
+            ]
+          },
+          "confidence": 0.7,
+          "exploitation_assessment": {
+            "difficulty": "Low",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": true
+          },
+          "rl_agent_hints": {
+            "attack_type": "backdoor_exploitation",
+            "suggested_tools": [
+              "netcat",
+              "nmap",
+              "metasploit"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "pattern_match",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.175993Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.04
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_80_201352",
+        "original": {
+          "id": "vuln_192.168.79.128_80_201352",
+          "h": "192.168.79.128",
+          "p": 80,
+          "s": 4,
+          "pn": "Canonical Ubuntu Linux SEoL (8.04.x)",
+          "c": "",
+          "cvss": 10.0,
+          "d": "According to its version, Canonical Ubuntu Linux is 8.04.x. It is, therefore, no longer maintained by its vendor or provider.\n\nLack of support implies that no new security patches for the product will be released by the vendor. As a result, it may contain security vulnerabilities.",
+          "sol": "Upgrade to a version of Canonical Ubuntu Linux that is currently supported."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-1035"
+          ],
+          "cwe_names": [
+            "Critical Weakness"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Initial Access"
+            ],
+            "techniques": [
+              "T1190"
+            ],
+            "technique_names": [
+              "Exploit Public-Facing Application"
+            ]
+          },
+          "confidence": 0.3,
+          "exploitation_assessment": {
+            "difficulty": "Unknown",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": false
+          },
+          "rl_agent_hints": {
+            "attack_type": "version_detection_and_exploit",
+            "suggested_tools": [
+              "nmap",
+              "searchsploit",
+              "exploit-db",
+              "metasploit"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "generic_fallback",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.176046Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.05
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_25_32321",
+        "original": {
+          "id": "vuln_192.168.79.128_25_32321",
+          "h": "192.168.79.128",
+          "p": 25,
+          "s": 4,
+          "pn": "Debian OpenSSH/OpenSSL Package Random Number Generator Weakness (SSL check)",
+          "c": "CVE-2008-0166",
+          "cvss": 10.0,
+          "d": "The remote x509 certificate on the remote SSL server has been generated on a Debian or Ubuntu system which contains a bug in the random number generator of its OpenSSL library. \n\nThe problem is due to a Debian packager removing nearly all sources of entropy in the remote version of OpenSSL. \n\nAn attacker can easily obtain the private part of the remote key and use this to decipher the remote session or set up a man in the middle attack.",
+          "sol": "Consider all cryptographic material generated on the remote host to be guessable.  In particuliar, all SSH, SSL and OpenVPN key material should be re-generated."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-338"
+          ],
+          "cwe_names": [
+            "Use of Cryptographically Weak PRNG"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Defense Evasion"
+            ],
+            "techniques": [
+              "T1600"
+            ]
+          },
+          "confidence": 0.95,
+          "exploitation_assessment": {
+            "difficulty": "Medium",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": true
+          },
+          "rl_agent_hints": {
+            "attack_type": "cryptographic_attack",
+            "suggested_tools": [
+              "custom_exploit",
+              "ssh_keygen_audit"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "cve_lookup",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.176250Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.05
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_22_32314",
+        "original": {
+          "id": "vuln_192.168.79.128_22_32314",
+          "h": "192.168.79.128",
+          "p": 22,
+          "s": 4,
+          "pn": "Debian OpenSSH/OpenSSL Package Random Number Generator Weakness",
+          "c": "CVE-2008-0166",
+          "cvss": 10.0,
+          "d": "The remote SSH host key has been generated on a Debian or Ubuntu system which contains a bug in the random number generator of its OpenSSL library.\n\nThe problem is due to a Debian packager removing nearly all sources of entropy in the remote version of OpenSSL.\n\nAn attacker can easily obtain the private part of the remote key and use this to set up decipher the remote session  or set up a man in the middle attack.",
+          "sol": "Consider all cryptographic material generated on the remote host to be guessable. In particuliar, all SSH, SSL and OpenVPN key material should be re-generated."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-338"
+          ],
+          "cwe_names": [
+            "Use of Cryptographically Weak PRNG"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Defense Evasion"
+            ],
+            "techniques": [
+              "T1600"
+            ]
+          },
+          "confidence": 0.95,
+          "exploitation_assessment": {
+            "difficulty": "Medium",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": true
+          },
+          "rl_agent_hints": {
+            "attack_type": "cryptographic_attack",
+            "suggested_tools": [
+              "custom_exploit",
+              "ssh_keygen_audit"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "cve_lookup",
+          "priority_score": 10.0
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.176301Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.05
+        }
+      },
+      {
+        "id": "vuln_192.168.79.128_5432_20007",
+        "original": {
+          "id": "vuln_192.168.79.128_5432_20007",
+          "h": "192.168.79.128",
+          "p": 5432,
+          "s": 4,
+          "pn": "SSL Version 2 and 3 Protocol Detection",
+          "c": "",
+          "cvss": 9.8,
+          "d": "The remote service accepts connections encrypted using SSL 2.0 and/or SSL 3.0. These versions of SSL are affected by several cryptographic flaws, including:\n\n  - An insecure padding scheme with CBC ciphers.\n\n  - Insecure session renegotiation and resumption schemes.\n\nAn attacker can exploit these flaws to conduct man-in-the-middle attacks or to decrypt communications between the affected service and clients.\n\nAlthough SSL/TLS has a secure means for choosing the highest supported version of the protocol (so that these versions will be used only if the client or server support nothing better), many web browsers implement this in an unsafe way that allows an attacker to downgrade a connection (such as in POODLE). Therefore, it is recommended that these protocols be disabled entirely.\n\nNIST has determined that SSL 3.0 is no longer acceptable for secure communications. As of the date of enforcement found in PCI DSS v3.1, any version of SSL will not meet the PCI SSC's definition of 'strong cryptography'.",
+          "sol": "Consult the application's documentation to disable SSL 2.0 and 3.0.\nUse TLS 1.2 (with approved cipher suites) or higher instead."
+        },
+        "classification": {
+          "cwe": [
+            "CWE-1035"
+          ],
+          "cwe_names": [
+            "Critical Weakness"
+          ],
+          "mitre_attack": {
+            "tactics": [
+              "Initial Access"
+            ],
+            "techniques": [
+              "T1190"
+            ],
+            "technique_names": [
+              "Exploit Public-Facing Application"
+            ]
+          },
+          "confidence": 0.3,
+          "exploitation_assessment": {
+            "difficulty": "Unknown",
+            "attack_vector": "Network",
+            "requires_auth": false,
+            "publicly_available_exploit": false
+          },
+          "rl_agent_hints": {
+            "attack_type": "mitm_attack",
+            "suggested_tools": [
+              "sslscan",
+              "testssl.sh",
+              "wireshark",
+              "bettercap"
+            ],
+            "validation_strategy": "Verify vulnerability through version detection or safe exploitation",
+            "expected_impact": "Critical - Remote Code Execution or Full System Compromise",
+            "next_steps": [
+              "prioritize_immediate_testing",
+              "enumerate_version",
+              "search_exploits",
+              "test_exploit"
+            ]
+          },
+          "categorization_source": "generic_fallback",
+          "priority_score": 9.2904
+        },
+        "metadata": {
+          "classified_at": "2025-11-18T08:47:34.175896Z",
+          "classifier_version": "1.0.0",
+          "processing_time_ms": 0.15
+        }
+      }
+    ],
+    "attack_types": [
+      "version_detection_and_exploit",
+      "dos_attack",
+      "mitm_attack",
+      "credential_attack",
+      "information_gathering",
+      "cryptographic_attack",
+      "file_disclosure",
+      "backdoor_exploitation",
+      "generic_exploitation"
+    ],
+    "required_tools": [
+      "burp_suite",
+      "searchsploit",
+      "netcat",
+      "dirb",
+      "custom_script",
+      "nmap",
+      "custom_exploit",
+      "sslscan",
+      "wireshark",
+      "ncrack",
+      "bettercap",
+      "wget",
+      "hydra",
+      "curl",
+      "testssl.sh",
+      "ssh_keygen_audit",
+      "slowloris",
+      "medusa",
+      "metasploit",
+      "exploit-db",
+      "hping3"
+    ]
+  }
+}

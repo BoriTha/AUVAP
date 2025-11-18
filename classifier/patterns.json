@@ -1,0 +1,236 @@
+{
+  "patterns": {
+    "backdoor": {
+      "keywords": ["backdoor", "bind shell", "reverse shell", "trojan", "malicious code"],
+      "cwe": ["CWE-912"],
+      "cwe_names": ["Hidden Functionality"],
+      "mitre_attack": {
+        "tactics": ["Persistence", "Execution"],
+        "techniques": ["T1554", "T1059"],
+        "technique_names": ["Compromise Client Software Binary", "Command and Scripting Interpreter"]
+      },
+      "exploitation_difficulty": "Low",
+      "priority_modifier": 2.0,
+      "attack_type": "backdoor_exploitation",
+      "suggested_tools": ["netcat", "nmap", "metasploit"]
+    },
+    "weak_credentials": {
+      "keywords": ["default password", "weak password", "password password", "hard-coded credentials", "hardcoded password", "blank password", "no password"],
+      "cwe": ["CWE-798", "CWE-521"],
+      "cwe_names": ["Use of Hard-coded Credentials", "Weak Password Requirements"],
+      "mitre_attack": {
+        "tactics": ["Initial Access", "Lateral Movement"],
+        "techniques": ["T1078", "T1110"],
+        "technique_names": ["Valid Accounts", "Brute Force"]
+      },
+      "exploitation_difficulty": "Low",
+      "priority_modifier": 1.8,
+      "attack_type": "credential_attack",
+      "suggested_tools": ["hydra", "medusa", "ncrack", "custom_script"]
+    },
+    "cryptographic_issues": {
+      "keywords": ["ssl 2.0", "ssl 3.0", "weak cipher", "broken cryptography", "weak encryption", "deprecated protocol", "poodle", "heartbleed"],
+      "cwe": ["CWE-327", "CWE-326"],
+      "cwe_names": ["Use of a Broken or Risky Cryptographic Algorithm", "Inadequate Encryption Strength"],
+      "mitre_attack": {
+        "tactics": ["Credential Access"],
+        "techniques": ["T1557", "T1040"],
+        "technique_names": ["Man-in-the-Middle", "Network Sniffing"]
+      },
+      "exploitation_difficulty": "High",
+      "priority_modifier": 1.2,
+      "attack_type": "mitm_attack",
+      "suggested_tools": ["sslscan", "testssl.sh", "wireshark", "bettercap"]
+    },
+    "rng_weakness": {
+      "keywords": ["random number generator", "rng weakness", "predictable", "weak prng", "entropy"],
+      "cwe": ["CWE-338"],
+      "cwe_names": ["Use of Cryptographically Weak Pseudo-Random Number Generator"],
+      "mitre_attack": {
+        "tactics": ["Defense Evasion"],
+        "techniques": ["T1600"],
+        "technique_names": ["Weaken Encryption"]
+      },
+      "exploitation_difficulty": "Medium",
+      "priority_modifier": 1.5,
+      "attack_type": "cryptographic_attack",
+      "suggested_tools": ["custom_exploit", "ssh_keygen_audit"]
+    },
+    "injection": {
+      "keywords": ["sql injection", "command injection", "code injection", "ldap injection", "xml injection", "xpath injection", "template injection"],
+      "cwe": ["CWE-89", "CWE-78", "CWE-94"],
+      "cwe_names": ["SQL Injection", "OS Command Injection", "Improper Control of Generation of Code"],
+      "mitre_attack": {
+        "tactics": ["Initial Access", "Execution"],
+        "techniques": ["T1190", "T1059"],
+        "technique_names": ["Exploit Public-Facing Application", "Command and Scripting Interpreter"]
+      },
+      "exploitation_difficulty": "Medium",
+      "priority_modifier": 1.9,
+      "attack_type": "injection_attack",
+      "suggested_tools": ["sqlmap", "commix", "burp_suite", "metasploit"]
+    },
+    "unmaintained_software": {
+      "keywords": ["end of life", "eol", "seol", "unsupported", "unmaintained", "deprecated version", "no longer supported"],
+      "cwe": ["CWE-1104"],
+      "cwe_names": ["Use of Unmaintained Third Party Components"],
+      "mitre_attack": {
+        "tactics": ["Initial Access"],
+        "techniques": ["T1190"],
+        "technique_names": ["Exploit Public-Facing Application"]
+      },
+      "exploitation_difficulty": "Medium",
+      "priority_modifier": 1.6,
+      "attack_type": "version_detection_and_exploit",
+      "suggested_tools": ["nmap", "searchsploit", "exploit-db", "metasploit"]
+    },
+    "xss": {
+      "keywords": ["cross-site scripting", "xss", "reflected xss", "stored xss", "dom xss"],
+      "cwe": ["CWE-79"],
+      "cwe_names": ["Improper Neutralization of Input During Web Page Generation"],
+      "mitre_attack": {
+        "tactics": ["Initial Access"],
+        "techniques": ["T1189"],
+        "technique_names": ["Drive-by Compromise"]
+      },
+      "exploitation_difficulty": "Low",
+      "priority_modifier": 1.3,
+      "attack_type": "web_exploitation",
+      "suggested_tools": ["burp_suite", "xsser", "browser_dev_tools"]
+    },
+    "buffer_overflow": {
+      "keywords": ["buffer overflow", "stack overflow", "heap overflow", "memory corruption"],
+      "cwe": ["CWE-119", "CWE-120"],
+      "cwe_names": ["Improper Restriction of Operations within Memory Buffers", "Buffer Copy without Checking Size of Input"],
+      "mitre_attack": {
+        "tactics": ["Execution"],
+        "techniques": ["T1203"],
+        "technique_names": ["Exploitation for Client Execution"]
+      },
+      "exploitation_difficulty": "High",
+      "priority_modifier": 1.7,
+      "attack_type": "memory_corruption",
+      "suggested_tools": ["gdb", "immunity_debugger", "metasploit", "custom_exploit"]
+    },
+    "directory_traversal": {
+      "keywords": ["directory traversal", "path traversal", "file inclusion", "lfi", "rfi"],
+      "cwe": ["CWE-22", "CWE-98"],
+      "cwe_names": ["Improper Limitation of a Pathname to a Restricted Directory", "Improper Control of Filename for Include/Require Statement"],
+      "mitre_attack": {
+        "tactics": ["Initial Access"],
+        "techniques": ["T1190"],
+        "technique_names": ["Exploit Public-Facing Application"]
+      },
+      "exploitation_difficulty": "Low",
+      "priority_modifier": 1.6,
+      "attack_type": "file_disclosure",
+      "suggested_tools": ["burp_suite", "dirb", "custom_script"]
+    },
+    "information_disclosure": {
+      "keywords": ["information disclosure", "sensitive information", "credentials exposed", "api key exposed", "token exposed"],
+      "cwe": ["CWE-200"],
+      "cwe_names": ["Exposure of Sensitive Information to an Unauthorized Actor"],
+      "mitre_attack": {
+        "tactics": ["Collection"],
+        "techniques": ["T1213"],
+        "technique_names": ["Data from Information Repositories"]
+      },
+      "exploitation_difficulty": "Low",
+      "priority_modifier": 1.4,
+      "attack_type": "information_gathering",
+      "suggested_tools": ["curl", "wget", "burp_suite", "nmap"]
+    },
+    "authentication_bypass": {
+      "keywords": ["authentication bypass", "auth bypass", "access control", "unauthorized access", "privilege escalation"],
+      "cwe": ["CWE-287", "CWE-306"],
+      "cwe_names": ["Improper Authentication", "Missing Authentication for Critical Function"],
+      "mitre_attack": {
+        "tactics": ["Initial Access", "Privilege Escalation"],
+        "techniques": ["T1078", "T1068"],
+        "technique_names": ["Valid Accounts", "Exploitation for Privilege Escalation"]
+      },
+      "exploitation_difficulty": "Medium",
+      "priority_modifier": 1.9,
+      "attack_type": "authentication_attack",
+      "suggested_tools": ["burp_suite", "custom_script", "metasploit"]
+    },
+    "denial_of_service": {
+      "keywords": ["denial of service", "dos", "ddos", "resource exhaustion", "crash"],
+      "cwe": ["CWE-400", "CWE-770"],
+      "cwe_names": ["Uncontrolled Resource Consumption", "Allocation of Resources Without Limits or Throttling"],
+      "mitre_attack": {
+        "tactics": ["Impact"],
+        "techniques": ["T1498", "T1499"],
+        "technique_names": ["Network Denial of Service", "Endpoint Denial of Service"]
+      },
+      "exploitation_difficulty": "Low",
+      "priority_modifier": 0.8,
+      "attack_type": "dos_attack",
+      "suggested_tools": ["hping3", "slowloris", "custom_script"]
+    }
+  },
+  "port_mappings": {
+    "22": {
+      "service": "SSH",
+      "common_attacks": ["weak_credentials", "authentication_bypass"]
+    },
+    "23": {
+      "service": "Telnet",
+      "common_attacks": ["weak_credentials", "information_disclosure"]
+    },
+    "25": {
+      "service": "SMTP",
+      "common_attacks": ["information_disclosure", "injection"]
+    },
+    "80": {
+      "service": "HTTP",
+      "common_attacks": ["injection", "xss", "authentication_bypass"]
+    },
+    "443": {
+      "service": "HTTPS",
+      "common_attacks": ["cryptographic_issues", "injection", "xss"]
+    },
+    "3306": {
+      "service": "MySQL",
+      "common_attacks": ["weak_credentials", "injection"]
+    },
+    "5432": {
+      "service": "PostgreSQL",
+      "common_attacks": ["weak_credentials", "injection"]
+    },
+    "5900": {
+      "service": "VNC",
+      "common_attacks": ["weak_credentials", "authentication_bypass"]
+    },
+    "8080": {
+      "service": "HTTP-Alt",
+      "common_attacks": ["injection", "xss", "unmaintained_software"]
+    }
+  },
+  "cve_patterns": {
+    "CVE-2020-1745": {
+      "name": "Ghostcat - Apache Tomcat AJP Connector",
+      "cwe": ["CWE-94", "CWE-200"],
+      "mitre_attack": {
+        "tactics": ["Initial Access", "Execution"],
+        "techniques": ["T1190", "T1059"]
+      }
+    },
+    "CVE-2010-2075": {
+      "name": "UnrealIRCd Backdoor",
+      "cwe": ["CWE-912"],
+      "mitre_attack": {
+        "tactics": ["Persistence", "Execution"],
+        "techniques": ["T1554"]
+      }
+    },
+    "CVE-2008-0166": {
+      "name": "Debian OpenSSL Weak RNG",
+      "cwe": ["CWE-338"],
+      "mitre_attack": {
+        "tactics": ["Defense Evasion"],
+        "techniques": ["T1600"]
+      }
+    }
+  }
+}

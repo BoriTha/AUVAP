@@ -1,0 +1,26 @@
+# Core dependencies for Nessus Vulnerability Processor & Classifier
+# Python 3.8+
+
+# Parser dependencies
+pyyaml>=6.0
+
+# LangChain and RAG dependencies
+langchain>=0.1.0
+langchain-openai>=0.0.5
+langchain-community>=0.0.20
+chromadb>=0.4.22
+sentence-transformers>=2.2.2
+
+# Data validation and processing
+pydantic>=2.0.0
+python-dotenv>=1.0.0
+
+# HTTP requests (for potential API integrations)
+requests>=2.31.0
+
+# Testing dependencies (dev)
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Utilities
+numpy>=1.24.0
