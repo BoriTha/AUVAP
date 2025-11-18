@@ -102,7 +102,8 @@ def sanitize_code(code: str, forbidden_commands: Optional[List[str]] = None) -> 
         # Default forbidden commands if not provided
         forbidden_commands = [
             "rm -rf", "format", "del /f", "dd if=", "mkfs", "> /dev/sda", 
-            ":(){ :|:& };:", "wget", "curl", "nc -e"
+            ":(){ :|:& };:", "wget", "curl", "nc -e",
+            "fdisk", "mkfs", "dd"
         ]
 
     # Normalize code for checking (lowercase)
@@ -129,9 +130,17 @@ def sanitize_code(code: str, forbidden_commands: Optional[List[str]] = None) -> 
     if re.search(r':\(\)\{\s*:\|:&?\s*\};:', code_lower):
         raise SecurityError("Security Violation: Fork bomb detected.")
 
+    # Detect network attacks (unless specifically allowed context, but here we block generally)
+    if re.search(r'(iptables|nmap|masscan)', code_lower):
+        raise SecurityError("Security Violation: Network scanning/modification tools detected.")
+
+    # Detect system modification
+    if re.search(r'(chmod\s+777|chown|useradd|usermod|groupadd)', code_lower):
+        raise SecurityError("Security Violation: System modification command detected.")
+
     # Detect dangerous os.system or subprocess calls with shell=True and dangerous keywords
     # This is a heuristic and not perfect, but catches obvious attempts
-    dangerous_keywords = ['rm', 'mkfs', 'dd', 'shutdown', 'reboot', 'wget', 'curl']
+    dangerous_keywords = ['rm', 'mkfs', 'dd', 'shutdown', 'reboot', 'wget', 'curl', 'chmod', 'chown']
     
     # Check for os.system usage with dangerous keywords
     if 'os.system' in code:

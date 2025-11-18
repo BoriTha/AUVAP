@@ -85,3 +85,47 @@ safety:
     - "dd if="
     - "mkfs"
     - "> /dev/sda"
+
+# Operating mode
+mode:
+  type: "hybrid"  # Options: "llm_only" | "hybrid" | "rl_only"
+  llm_only:
+    ranking_strategy: "easy_first"  # Options: "easy_first" | "critical_first" | "custom"
+    use_rag: true
+  hybrid:
+    use_skill_library: true
+    use_metasploit: true
+    skill_persistence: "persist_with_decay"  # Options: "reset_always" | "persist_forever" | "persist_with_decay"
+
+# Skill Library settings
+skill_library:
+  enabled: true
+  path: "data/agent_results/skill_library.json"
+  max_failures: 3  # Remove skill after this many consecutive failures
+  auto_save: true
+  prioritize_cached: true  # RL gets higher reward for using cached exploits
+
+# RAG settings
+rag:
+  enabled: true
+  embedding_model: "all-MiniLM-L6-v2"  # Lightweight sentence-transformers
+  vector_db_path: "data/agent_results/rag_exploits.pkl"
+  top_k: 3  # Number of examples to inject into LLM prompt
+  similarity_threshold: 0.7
+
+# Metasploit integration
+metasploit:
+  enabled: true
+  rpc_host: "127.0.0.1"
+  rpc_port: 55553
+  rpc_ssl: false
+  username: "msf"
+  password: "msf123"
+  auto_start: false  # Start msfconsole RPC automatically
+  module_map: "config/msf_modules.yaml"  # CVE -> MSF module mapping
+  
+  # Auto-discovery settings (REAL-WORLD READY)
+  auto_discover: true  # Search MSF database for unknown services
+  auto_discover_confidence_threshold: 0.6  # Minimum confidence to use auto-discovered module
+  auto_save_successful: true  # Save successful auto-discoveries to YAML
+

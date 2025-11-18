@@ -1,0 +1,53 @@
+# CVE/Service -> Metasploit module mapping
+# START MINIMAL: Only Metasploitable 2 services
+# AGENT LEARNS: Auto-discovers and saves new modules as it trains
+
+modules:
+  "vsftpd 2.3.4":
+    module: "exploit/unix/ftp/vsftpd_234_backdoor"
+    cve: "CVE-2011-2523"
+    ports: [21]
+    payload: "cmd/unix/interact"
+    reliability: "excellent"
+    source: "manual"
+  
+  "samba 3.0.20":
+    module: "exploit/multi/samba/usermap_script"
+    cve: "CVE-2007-2447"
+    ports: [139, 445]
+    payload: "cmd/unix/bind_netcat"
+    reliability: "excellent"
+    source: "manual"
+  
+  "unrealircd 3.2.8.1":
+    module: "exploit/unix/irc/unreal_ircd_3281_backdoor"
+    cve: "CVE-2010-2075"
+    ports: [6667]
+    payload: "cmd/unix/reverse"
+    reliability: "excellent"
+    source: "manual"
+  
+  "distcc":
+    module: "exploit/unix/misc/distcc_exec"
+    cve: "CVE-2004-2687"
+    ports: [3632]
+    payload: "cmd/unix/bind_netcat"
+    reliability: "excellent"
+    source: "manual"
+  
+  "postgresql":
+    module: "exploit/linux/postgres/postgres_payload"
+    ports: [5432]
+    payload: "linux/x86/shell_reverse_tcp"
+    reliability: "good"
+    source: "manual"
+
+# Auto-discovery section (agent populates as it learns)
+auto_discovered:
+  # Format (agent adds automatically):
+  # "service_name version":
+  #   module: "exploit/path/to/module"
+  #   discovered_date: "ISO timestamp"
+  #   success_count: N
+  #   reliability: "unverified" | "testing" | "good" | "excellent"
+  #   confidence: 0.0-1.0
