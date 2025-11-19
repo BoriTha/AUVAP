@@ -6,28 +6,35 @@
 
 ## 📍 The Only 3 Things You Need
 
-### 1️⃣ **Put Your Nessus Scans Here:**
+### 1️⃣ **Put Your Nessus Scans Here (Optional):**
 ```
 data/input/
 ```
-Drop your `.nessus` files in this folder. That's it.
+Drop your `.nessus` files in this folder if you have them. The agent can also scan for you!
 
 ---
 
-### 2️⃣ **Run This One Command:**
+### 2️⃣ **Run The Agent:**
+
+**Quick Start (Smart Triage):**
 ```bash
-python scripts/parse_and_classify.py data/input/YOUR_SCAN.nessus data/output/result.json
+./run_pentest.sh llm-only 192.168.79.128
 ```
 
-Replace `YOUR_SCAN.nessus` with your actual filename.
+**Full Autonomous Mode (RL + Learning):**
+```bash
+./run_pentest.sh hybrid 192.168.79.128
+```
+
+*(Replace IP with your target)*
 
 ---
 
-### 3️⃣ **Get Your Results Here:**
+### 3️⃣ **Get Your Reports Here:**
 ```
-data/output/result.json
+data/agent_results/
 ```
-This file has everything your RL agent needs!
+You'll find detailed JSON reports and statistics here.
 
 ---
 
@@ -37,14 +44,20 @@ Everything else is automatic. You don't need to touch anything else.
 
 ---
 
-## 🔧 Optional: If You Want More Control
+## 🔧 Advanced Usage
 
-### Filter by Severity (Only Critical & High):
+For more details on training, evaluation, and configuration, check:
+- `README_AGENT.md` - Full agent documentation
+- `HOW_IT_WORKS.md` - Architecture details
+
+### Manual Execution:
 ```bash
-python scripts/parse_and_classify.py \
-    data/input/scan.nessus \
-    data/output/result.json \
-    --severity 3 4
+python apfa_agent/main_agent.py --mode hybrid --target <IP>
+```
+
+### Parse Nessus Scans Manually:
+```bash
+python scripts/parse_and_classify.py data/input/scan.nessus data/output/result.json
 ```
 
 ### Filter by CVSS Score (7.0+):

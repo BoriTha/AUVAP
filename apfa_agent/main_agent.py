@@ -88,19 +88,40 @@ def phase_0_scan(config: dict, force_rescan: bool = False) -> dict:
     print("PHASE 0: NETWORK RECONNAISSANCE")
     print("="*60)
     
-    scanner = NmapScanner()
-    # NmapScanner might need config or arguments, assuming default for now or checking usage
-    # Based on previous main_agent.py, it was just NmapScanner()
-    
-    # Check if we need to pass target
+    scanner = NmapScanner(config)
     target_ip = config.get('target', {}).get('ip')
-    if target_ip:
-        # If scanner supports setting target
-        pass 
-        
-    nmap_results = scanner.get_scan_results(force_rescan=force_rescan)
     
-    print(f"✓ Found {len(nmap_results.get('open_ports', []))} open ports")
+    if not target_ip:
+        print("Error: No target IP specified in config or arguments")
+        sys.exit(1)
+        
+    try:
+        # Force rescan if requested, otherwise let scanner decide based on config
+        if force_rescan:
+            # Temporarily override mode to live for this scan
+            original_mode = scanner.mode
+            scanner.mode = 'live'
+            nmap_results = scanner.scan(target_ip)
+            scanner.mode = original_mode
+        else:
+            nmap_results = scanner.scan(target_ip)
+            
+    except Exception as e:
+        print(f"Scan failed: {e}")
+        sys.exit(1)
+    
+    # Count open ports
+    open_ports = 0
+    for host in nmap_results.get('hosts', []):
+        for service in host.get('services', []):
+            if service.get('state') == 'open':
+                open_ports += 1
+                
+    print(f"✓ Found {open_ports} open ports")
+    
+    if open_ports == 0:
+        print(" Warning: No open ports found. Agent may have nothing to do.")
+        
     return nmap_results
 
 def phase_1_enrichment(config: dict) -> str:
@@ -121,12 +142,12 @@ def phase_1_enrichment(config: dict) -> str:
         print(f"✓ Loading APFA data: {apfa_path}")
         return apfa_path
     else:
-        print(f"⚠️  APFA data not found: {apfa_path}")
+        print(f"APFA data not found: {apfa_path}")
         return None
 
 def llm_only_mode(config: dict, config_path: str, target_ip: str = None, apfa_path: str = None):
     """LLM-only mode: Simple sequential attacking"""
-    print("\n🤖 MODE: LLM-ONLY (Smart Triage)")
+    print("\nMODE: LLM-ONLY (Smart Triage)")
     
     if target_ip:
         if 'target' not in config: config['target'] = {}
@@ -134,23 +155,23 @@ def llm_only_mode(config: dict, config_path: str, target_ip: str = None, apfa_pa
     
     # Phase 0: Scan (if no APFA data provided)
     if not apfa_path:
-        print("📡 Running Nmap scan (no APFA data provided)")
+        print("Running Nmap scan (no APFA data provided)")
         nmap_results = phase_0_scan(config)
     else:
-        print(f"📂 Using existing APFA data: {apfa_path}")
+        print(f"Using existing APFA data: {apfa_path}")
         nmap_results = None  # Will use APFA data instead
     
     # Phase 1: Load APFA data (if provided) or use scan results
     if not apfa_path:
         apfa_path = phase_1_enrichment(config)
         if not apfa_path:
-            print("⚠️  Warning: No APFA data available, using scan results only")
+            print(" Warning: No APFA data available, using scan results only")
     else:
-        print(f"📂 Using provided APFA data: {apfa_path}")
+        print(f"Using provided APFA data: {apfa_path}")
     
     # Execute LLM-only mode with available data
     if not apfa_path and not nmap_results:
-        print("❌ LLM-only mode requires either APFA data or successful scan")
+        print("LLM-only mode requires either APFA data or successful scan")
         sys.exit(1)
     
     # Execute
@@ -159,12 +180,22 @@ def llm_only_mode(config: dict, config_path: str, target_ip: str = None, apfa_pa
     print("="*60)
     
     # SmartTriageAgent init might need config_path
-    mode = LLMOnlyMode(config_path=config_path)
+    mode = LLMOnlyMode(config_path=config_path, config=config)
     
     # SmartTriageAgent.run might take apfa_path or nmap_results
     # Checking llm_only_mode.py content again would be good, but assuming run(apfa_path) based on prompt
-    results = mode.run(apfa_path)
+    results = mode.run(classified_json_path=apfa_path, nmap_results=nmap_results)
     
+    # Calculate stats for report
+    total_ports_count = 0
+    services_list = []
+    if nmap_results:
+        for host in nmap_results.get('hosts', []):
+            for svc in host.get('services', []):
+                if svc.get('state') == 'open':
+                    total_ports_count += 1
+                    services_list.append(svc)
+
     # Generate report
     report = {
         'metadata': {
@@ -173,8 +204,8 @@ def llm_only_mode(config: dict, config_path: str, target_ip: str = None, apfa_pa
             'scan_date': datetime.now().isoformat()
         },
         'scan_results': {
-            'total_ports': len(nmap_results['open_ports']) if nmap_results else 0,
-            'services': nmap_results['open_ports'] if nmap_results else []
+            'total_ports': total_ports_count,
+            'services': services_list
         },
         'exploitation_results': {
             'total_attempts': len(results),
@@ -193,8 +224,8 @@ def llm_only_mode(config: dict, config_path: str, target_ip: str = None, apfa_pa
     with open(report_path, 'w') as f:
         json.dump(report, f, indent=2)
     
-    print(f"\n✅ Report saved: {report_path}")
-    print(f"\n📊 Summary:")
+    print(f"\nReport saved: {report_path}")
+    print(f"\nSummary:")
     print(f"  Total attempts: {report['exploitation_results']['total_attempts']}")
     print(f"  Successful: {report['exploitation_results']['successful_exploits']}")
     print(f"  Success rate: {report['exploitation_results']['success_rate']:.1%}")
@@ -257,7 +288,7 @@ def train_mode(config: dict, config_path: str, timesteps: int = None):
     print(f"Training for {timesteps} timesteps...")
     ppo_agent.train(total_timesteps=timesteps)
     
-    print("\n✅ Training complete!")
+    print("\nTraining complete!")
     print(f"Model saved: {ppo_agent.model_path}")
     
     # Print skill library stats
@@ -265,7 +296,7 @@ def train_mode(config: dict, config_path: str, timesteps: int = None):
 
 def hybrid_mode(config: dict, config_path: str, target_ip: str = None):
     """Hybrid mode: RL + LLM + Skill Library"""
-    print("\n🎯 MODE: HYBRID (RL + LLM + Skill Library)")
+    print("\nMODE: HYBRID (RL + LLM + Skill Library)")
     
     if target_ip:
         if 'target' not in config: config['target'] = {}
@@ -314,7 +345,7 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None):
     done = False
     step = 0
     
-    print("\n🚀 Starting autonomous exploitation...\n")
+    print("\nStarting autonomous exploitation...\n")
     
     while not done:
         step += 1
@@ -354,7 +385,7 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None):
         print(f"Result: {info.get('result', 'unknown')}")
         
         if info.get('root_obtained'):
-            print("🎉 ROOT ACCESS OBTAINED!")
+            print("ROOT ACCESS OBTAINED!")
             break
     
     # Generate report
@@ -368,8 +399,8 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None):
     with open(report_path, 'w') as f:
         json.dump(report, f, indent=2)
     
-    print(f"\n✅ Report saved: {report_path}")
-    print(f"\n📊 Summary:")
+    print(f"\nReport saved: {report_path}")
+    print(f"\nSummary:")
     print(f"  Total attempts: {report['exploitation_results']['total_attempts']}")
     print(f"  Successful: {report['exploitation_results']['successful_exploits']}")
     print(f"  Success rate: {report['exploitation_results']['success_rate']:.1%}")
@@ -379,7 +410,7 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None):
 
 def eval_mode(config: dict, config_path: str, n_episodes: int = 10):
     """Evaluation mode"""
-    print("\n📈 MODE: EVALUATION")
+    print("\nMODE: EVALUATION")
     
     # Setup (same as hybrid)
     nmap_results = phase_0_scan(config)
@@ -498,7 +529,7 @@ def main():
     try:
         is_vm = is_running_in_vm()
         if not is_vm:
-            print("🚨 SAFETY WARNING: Not running in a VM!")
+            print("  SAFETY WARNING: Not running in a VM!")
             print("   This tool is designed for authorized pentesting only.")
             print("   Running on your host machine could be dangerous.")
             print("")
@@ -508,18 +539,18 @@ def main():
             if os.environ.get('APFA_SKIP_SAFETY_CHECK') != 'true':
                 response = input("Are you sure you want to continue? (y/N): ").strip().lower()
                 if response not in ['y', 'yes']:
-                    print("❌ Aborted for safety")
+                    print("  Aborted for safety")
                     sys.exit(0)
                 else:
-                    print("⚠️  Proceeding anyway - you are responsible for any damage")
+                    print("   Proceeding anyway - you are responsible for any damage")
         else:
-            print("✅ Running in VM - safety check passed")
+            print(" Running in VM - safety check passed")
     except Exception as e:
-        print(f"⚠️  Could not verify VM status: {e}")
+        print(f"   Could not verify VM status: {e}")
         if os.environ.get('APFA_SKIP_SAFETY_CHECK') != 'true':
             response = input("Continue anyway? (y/N): ").strip().lower()
             if response not in ['y', 'yes']:
-                print("❌ Aborted")
+                print("  Aborted")
                 sys.exit(0)
     
     # Print banner
@@ -546,10 +577,10 @@ def main():
             eval_mode(config, args.config, n_episodes=args.episodes)
     
     except KeyboardInterrupt:
-        print("\n\n⚠️  Interrupted by user")
+        print("\n\n   Interrupted by user")
         sys.exit(130)
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\n  Error: {e}")
         import traceback
         traceback.print_exc()
         sys.exit(1)

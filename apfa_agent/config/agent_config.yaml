@@ -35,7 +35,7 @@ llm:
       temperature: 0.1
       max_tokens: 1500
       timeout: 60
-      enabled: true
+      enabled: false
     
     - name: "local-codellama"
       provider: "ollama"
@@ -45,16 +45,16 @@ llm:
       max_tokens: 2000
       timeout: 90
       enabled: false
-    
+
     - name: "sherlock"
       provider: "openrouter"
-      model: "openrouter/sherlock-think-alpha"
+      model: "openrouter/openrouter/sherlock-think-alpha"
       api_key_env: "OPENROUTER_API_KEY"
       temperature: 0.1
       max_tokens: 1500
       timeout: 60
-      enabled: false
-    
+      enabled: true
+
     - name: "longcat-flash-chat"
       provider: "openrouter"
       model: "meituan/longcat-flash-chat:free"
@@ -62,7 +62,27 @@ llm:
       temperature: 0.1
       max_tokens: 1500
       timeout: 60
-      enabled: false
+      enabled: true
+    
+    - name: "qwen-free"
+      provider: "openrouter"
+      model: "qwen/qwen-2.5-72b-instruct:free"
+      api_key_env: "OPENROUTER_API_KEY"
+      temperature: 0.1
+      max_tokens: 1500
+      timeout: 60
+      enabled: true
+    
+    - name: "phi-free"
+      provider: "openrouter"
+      model: "microsoft/phi-4:free"
+      api_key_env: "OPENROUTER_API_KEY"
+      temperature: 0.1
+      max_tokens: 1500
+      timeout: 60
+      enabled: true
+    
+    
  
   retry:
     max_failures_per_model: 3

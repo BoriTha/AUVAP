@@ -1,0 +1,577 @@
+[
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 21,
+      "service": "ftp",
+      "version": "2.3.4",
+      "protocol": "tcp",
+      "original": {
+        "pn": "vsftpd 2.3.4",
+        "name": "vsftpd 2.3.4",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060717",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:19.167606"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 6667,
+      "service": "irc",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "UnrealIRCd unknown",
+        "name": "UnrealIRCd unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060719",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:21.272198"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 5432,
+      "service": "postgresql",
+      "version": "8.3.0 - 8.3.7",
+      "protocol": "tcp",
+      "original": {
+        "pn": "PostgreSQL DB 8.3.0 - 8.3.7",
+        "name": "PostgreSQL DB 8.3.0 - 8.3.7",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060721",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:23.793334"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 22,
+      "service": "ssh",
+      "version": "4.7p1 Debian 8ubuntu1",
+      "protocol": "tcp",
+      "original": {
+        "pn": "OpenSSH 4.7p1 Debian 8ubuntu1",
+        "name": "OpenSSH 4.7p1 Debian 8ubuntu1",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060723",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:25.910517"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 23,
+      "service": "telnet",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Linux telnetd unknown",
+        "name": "Linux telnetd unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060725",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:27.950893"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 25,
+      "service": "smtp",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Postfix smtpd unknown",
+        "name": "Postfix smtpd unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060727",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:29.941037"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 53,
+      "service": "domain",
+      "version": "9.4.2",
+      "protocol": "tcp",
+      "original": {
+        "pn": "ISC BIND 9.4.2",
+        "name": "ISC BIND 9.4.2",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060729",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:31.872176"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 80,
+      "service": "http",
+      "version": "2.2.8",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Apache httpd 2.2.8",
+        "name": "Apache httpd 2.2.8",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060731",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:34.399114"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 111,
+      "service": "rpcbind",
+      "version": "2",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown 2",
+        "name": "unknown 2",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060734",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:36.667670"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 139,
+      "service": "netbios-ssn",
+      "version": "3.X - 4.X",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Samba smbd 3.X - 4.X",
+        "name": "Samba smbd 3.X - 4.X",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060736",
+      "post_exploit_error": "Authentication failed."
+    },
+    "timestamp": "2025-11-19T06:07:38.567746"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 445,
+      "service": "netbios-ssn",
+      "version": "3.0.20-Debian",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Samba smbd 3.0.20-Debian",
+        "name": "Samba smbd 3.0.20-Debian",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.586689"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 512,
+      "service": "exec",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "netkit-rsh rexecd unknown",
+        "name": "netkit-rsh rexecd unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.599646"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 513,
+      "service": "login",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown unknown",
+        "name": "unknown unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.613513"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 514,
+      "service": "tcpwrapped",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown unknown",
+        "name": "unknown unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.627416"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 1099,
+      "service": "java-rmi",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "GNU Classpath grmiregistry unknown",
+        "name": "GNU Classpath grmiregistry unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.640068"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 1524,
+      "service": "bindshell",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Metasploitable root shell unknown",
+        "name": "Metasploitable root shell unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.660047"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 2049,
+      "service": "nfs",
+      "version": "2-4",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown 2-4",
+        "name": "unknown 2-4",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.673849"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 2121,
+      "service": "ftp",
+      "version": "1.3.1",
+      "protocol": "tcp",
+      "original": {
+        "pn": "ProFTPD 1.3.1",
+        "name": "ProFTPD 1.3.1",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.689801"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 3306,
+      "service": "mysql",
+      "version": "5.0.51a-3ubuntu5",
+      "protocol": "tcp",
+      "original": {
+        "pn": "MySQL 5.0.51a-3ubuntu5",
+        "name": "MySQL 5.0.51a-3ubuntu5",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.704461"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 5900,
+      "service": "vnc",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "VNC unknown",
+        "name": "VNC unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.718980"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 6000,
+      "service": "X11",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown unknown",
+        "name": "unknown unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.732307"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 8009,
+      "service": "ajp13",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Apache Jserv unknown",
+        "name": "Apache Jserv unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.747993"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 8180,
+      "service": "http",
+      "version": "1.1",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Apache Tomcat/Coyote JSP engine 1.1",
+        "name": "Apache Tomcat/Coyote JSP engine 1.1",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS\nCREDENTIALS: admin:admin\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_060738",
+      "post_exploit_error": "Error reading SSH protocol banner"
+    },
+    "timestamp": "2025-11-19T06:07:38.761765"
+  }
+]

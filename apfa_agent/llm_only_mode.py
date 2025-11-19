@@ -1,7 +1,7 @@
 import json
 import logging
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, List, Any, Optional
 from datetime import datetime
 
 from apfa_agent.core.llm_client import UniversalLLMClient
@@ -19,15 +19,23 @@ class SmartTriageAgent:
     Executes attacks sequentially based on LLM ranking, without RL.
     """
     
-    def __init__(self, config_path: str = "apfa_agent/config/agent_config.yaml"):
+    def __init__(self, config_path: str = "apfa_agent/config/agent_config.yaml", config: Optional[Dict] = None):
         # Load config
-        # Assuming config loading is handled by components or passed down
-        # For simplicity, we'll instantiate components directly if they handle their own config
-        # or we load it here.
+        import yaml
+        if config:
+            self.config = config
+        elif Path(config_path).exists():
+            with open(config_path) as f:
+                self.config = yaml.safe_load(f)
+        else:
+            # Try resolving path relative to project root or current file if needed
+            # But prefer explicit config passed in
+            logger.warning(f"Config file not found at {config_path}, using defaults")
+            self.config = {}
         
         # Initialize components
-        self.llm_client = UniversalLLMClient() # Config loaded internally
-        self.executor = CowboyExecutor(config={'require_vm': False}) # TODO: Load from real config
+        self.llm_client = UniversalLLMClient(config=self.config)
+        self.executor = CowboyExecutor(config=self.config.get('execution', {'require_vm': False}))
         self.ranker = LLMRanker(ranking_strategy="easy_first")
         self.tool_manager = ToolManager()
         self.rag_manager = RAGManager() # Assuming it exists
@@ -35,14 +43,49 @@ class SmartTriageAgent:
         self.results_dir = Path("data/agent_results")
         self.results_dir.mkdir(parents=True, exist_ok=True)
 
-    def run(self, classified_json_path: str):
+    def run(self, classified_json_path: Optional[str] = None, nmap_results: Optional[Dict] = None):
         """
         Run the Smart Triage process.
         """
         print("🚀 Starting Smart Triage (LLM-only mode)...")
         
         # 1. Rank Targets
-        targets = self.ranker.rank_targets(classified_json_path)
+        if classified_json_path:
+            targets = self.ranker.rank_targets(classified_json_path)
+        elif nmap_results:
+            # Convert Nmap results to target list
+            print("Converting Nmap results to target list...")
+            targets = []
+            for host in nmap_results.get('hosts', []):
+                for svc in host.get('services', []):
+                    if svc.get('state') != 'open':
+                        continue
+                        
+                    product = svc.get('product', '')
+                    version = svc.get('version', '')
+                    pn = f"{product} {version}".strip()
+                    if not pn:
+                        pn = svc.get('service', 'unknown')
+                        
+                    target = {
+                        'ip': host['ip'],
+                        'port': svc['port'],
+                        'service': svc['service'],
+                        'version': version,
+                        'protocol': svc.get('protocol', 'tcp'),
+                        'original': {
+                            'pn': pn,
+                            'name': pn,
+                            'cvss': 5.0 # Default priority if unknown
+                        }
+                    }
+                    targets.append(target)
+            
+            targets = self.ranker.rank_list(targets)
+        else:
+            print("Error: No targets provided (neither APFA file nor Nmap results)")
+            return []
+
         print(f"📋 Found {len(targets)} targets to attack.")
         
         results = []

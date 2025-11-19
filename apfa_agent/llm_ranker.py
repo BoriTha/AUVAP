@@ -29,7 +29,10 @@ class LLMRanker:
             data = json.load(f)
         
         vulns = data.get('vulnerabilities', [])
-        
+        return self.rank_list(vulns)
+
+    def rank_list(self, vulns: List[Dict]) -> List[Dict]:
+        """Rank a list of vulnerability dictionaries"""
         if self.strategy == "easy_first":
             return self._rank_by_ease(vulns)
         elif self.strategy == "critical_first":

@@ -101,22 +101,21 @@ class NmapScanner:
         output_filename = f"nmap_{target}_{timestamp}.xml"
         output_path = os.path.join(self.output_dir, output_filename)
         
-        # Add -oX to arguments to save XML
-        # python-nmap saves it if we ask, but we can also just let it parse.
-        # But requirements say "Save scans to data/scans/..."
-        # We can pass arguments to nmap to save the file.
-        full_args = f"{args} -oX {output_path}"
+        # Add -oX to arguments to save XML - UPDATE: python-nmap forbids -oX in arguments
+        # We must capture it after the scan using get_nmap_last_output()
+        full_args = args
         
         logger.info(f"Executing: nmap {full_args} {target}")
         
         try:
-            # We use self.nm.scan() which returns a dict, but we also want the XML file.
-            # Passing -oX in arguments works with python-nmap.
+            # We use self.nm.scan() which returns a dict
             self.nm.scan(hosts=target, arguments=full_args, sudo=self.sudo)
             
-            # The scan method populates self.nm.csv(), self.nm.all_hosts(), etc.
-            # But we also want to parse the XML file we just generated to ensure consistency 
-            # with the _load_existing_scan method.
+            # Retrieve XML output and save to file manually
+            xml_content = self.nm.get_nmap_last_output()
+            if xml_content:
+                with open(output_path, 'wb' if isinstance(xml_content, bytes) else 'w') as f:
+                    f.write(xml_content)
             
             if os.path.exists(output_path):
                 return self._load_existing_scan(output_path)
