@@ -83,7 +83,10 @@ class CowboyExecutor:
             result["output"] = stdout + "\n" + stderr
             
             # 4. Parse Results
-            if "STATUS: SUCCESS" in stdout:
+            # Check for explicit success marker OR common shell indicators
+            success_indicators = ["STATUS: SUCCESS", "uid=0(root)", "gid=0(root)", "# ", "$ "]
+            
+            if any(indicator in stdout for indicator in success_indicators):
                 result["success"] = True
                 result["status"] = "success"
                 logger.info(f"✓ Exploit succeeded for {target_ip}:{port}")

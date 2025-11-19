@@ -10,8 +10,24 @@ class UniversalLLMClient:
     Universal LLM Client supporting multiple providers via LiteLLM.
     """
     
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: Optional[Dict] = None, model_name: Optional[str] = None):
         self.config = config or {}
+        
+        # Support direct model_name init (for tests/legacy)
+        if model_name:
+             if 'llm' not in self.config:
+                 self.config['llm'] = {}
+             if 'models' not in self.config['llm']:
+                 self.config['llm']['models'] = []
+             
+             # Prepend the requested model
+             self.config['llm']['models'].insert(0, {
+                 'name': model_name,
+                 'model': model_name,
+                 'provider': 'ollama',
+                 'enabled': True
+             })
+
         self.use_dummy = False
         self.litellm_available = False
         self.model = None
@@ -45,10 +61,15 @@ class UniversalLLMClient:
                     self.model = str(model_name)
                     self.api_base = m.get('endpoint')  # Optional endpoint override
                     self.provider = m.get('provider', 'unknown')
+                    self.timeout = m.get('timeout', 60)
                     
                     # For OpenRouter, prepend openrouter/ if not already present
                     if self.provider == 'openrouter' and not self.model.startswith('openrouter/'):
                         self.model = f"openrouter/{self.model}"
+
+                    # For Ollama, prepend ollama/ if not already present
+                    if self.provider == 'ollama' and not self.model.startswith('ollama/'):
+                        self.model = f"ollama/{self.model}"
                     
                     print(f"\n[{idx + 1}/{len(enabled_models)}] Testing model: {m.get('name')} ({self.provider})")
                     print(f"    Model: {self.model}")
@@ -151,10 +172,15 @@ class UniversalLLMClient:
                 self.model = str(model_name)
                 self.api_base = m.get('endpoint')
                 self.provider = m.get('provider', 'unknown')
+                self.timeout = m.get('timeout', 60)
                 
                 # For OpenRouter, prepend openrouter/ if not already present
                 if self.provider == 'openrouter' and not self.model.startswith('openrouter/'):
                     self.model = f"openrouter/{self.model}"
+
+                # For Ollama, prepend ollama/ if not already present
+                if self.provider == 'ollama' and not self.model.startswith('ollama/'):
+                    self.model = f"ollama/{self.model}"
                 
                 print(f"\n[Auto-switching] Trying model: {m.get('name')} ({self.provider})")
                 print(f"    Model: {self.model}")
@@ -240,7 +266,8 @@ class UniversalLLMClient:
             # Construct kwargs
             kwargs = {
                 "model": model_name,
-                "messages": [{"role": "user", "content": prompt}]
+                "messages": [{"role": "user", "content": prompt}],
+                "timeout": getattr(self, 'timeout', 60)
             }
             
             # Add api_base if configured (crucial for custom Ollama endpoints)
@@ -272,7 +299,22 @@ class UniversalLLMClient:
             # Basic check to ensure we didn't get an empty response
             if not content:
                 raise ValueError("Received empty response from LLM")
-            return content
+
+            # --- NEW CLEANING LOGIC FOR UNCENSORED MODELS ---
+            
+            # 1. Remove Markdown backticks
+            content = content.replace("```python", "").replace("```", "")
+            
+            # 2. Remove conversational filler lines (basic heuristic)
+            lines = content.split('\n')
+            clean_lines = []
+            for line in lines:
+                # Filter out lines that look like chat
+                if line.strip().startswith(("Here", "Sure", "I have", "Note:", "Warning:")):
+                    continue
+                clean_lines.append(line)
+                
+            return "\n".join(clean_lines).strip()
             
         except Exception as e:
             logger.error(f"LLM generation failed: {e}")
@@ -301,4 +343,9 @@ import sys
 print("STATUS: SUCCESS")
 print("CREDENTIALS: admin:admin")
 """
+
+    def think(self, prompt: str) -> str:
+        return self.generate_code(prompt)
+
+Brain = UniversalLLMClient
 

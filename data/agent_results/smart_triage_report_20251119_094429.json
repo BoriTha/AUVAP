@@ -1,0 +1,554 @@
+[
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 21,
+      "service": "ftp",
+      "version": "2.3.4",
+      "protocol": "tcp",
+      "original": {
+        "pn": "vsftpd 2.3.4",
+        "name": "vsftpd 2.3.4",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "unknown",
+      "output": "\n  File \"/home/jay/Auvap/APFA/data/temp/exploit_192.168.187.128_21_20251119_094155.py\", line 1\n    It seems that there's a syntax problem in your code. Below is a potential solution to your issue: \n                       ^\nSyntaxError: unterminated string literal (detected at line 1)\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_094155"
+    },
+    "timestamp": "2025-11-19T09:41:55.869323"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 6667,
+      "service": "irc",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "UnrealIRCd unknown",
+        "name": "UnrealIRCd unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'dd'",
+      "evidence": null,
+      "timestamp": "20251119_094202"
+    },
+    "timestamp": "2025-11-19T09:42:02.820022"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 5432,
+      "service": "postgresql",
+      "version": "8.3.0 - 8.3.7",
+      "protocol": "tcp",
+      "original": {
+        "pn": "PostgreSQL DB 8.3.0 - 8.3.7",
+        "name": "PostgreSQL DB 8.3.0 - 8.3.7",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "unknown",
+      "output": "\n  File \"/home/jay/Auvap/APFA/data/temp/exploit_192.168.187.128_5432_20251119_094212.py\", line 1\n    The provided error message implies a problem with the script's syntax. The file and line number are relative to the current working directory, so they should be adjusted according to your environment. \n                                                                ^\nSyntaxError: unterminated string literal (detected at line 1)\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_094212"
+    },
+    "timestamp": "2025-11-19T09:42:12.306728"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 22,
+      "service": "ssh",
+      "version": "4.7p1 Debian 8ubuntu1",
+      "protocol": "tcp",
+      "original": {
+        "pn": "OpenSSH 4.7p1 Debian 8ubuntu1",
+        "name": "OpenSSH 4.7p1 Debian 8ubuntu1",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "unknown",
+      "output": "\n  File \"/home/jay/Auvap/APFA/data/temp/exploit_192.168.187.128_22_20251119_094217.py\", line 12\n    In this corrected code, 'return' is used to return a tuple of two values - the message and the error if any, from within the try block. If no error occurs, the function will simply print the message without returning anything.\n       ^^^^\nSyntaxError: invalid syntax\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_094217"
+    },
+    "timestamp": "2025-11-19T09:42:17.633888"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 23,
+      "service": "telnet",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Linux telnetd unknown",
+        "name": "Linux telnetd unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'dd'",
+      "evidence": null,
+      "timestamp": "20251119_094222"
+    },
+    "timestamp": "2025-11-19T09:42:22.559211"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 25,
+      "service": "smtp",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Postfix smtpd unknown",
+        "name": "Postfix smtpd unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "unknown",
+      "output": "\n  File \"/home/jay/Auvap/APFA/data/temp/exploit_192.168.187.128_25_20251119_094230.py\", line 42\n    In this fixed Python code, it attempts to establish an SMTP connection with the target server, login using the provided credentials, create the email object, and then send the email using SMTPAuthentication. Any errors that occur during the process are caught and printed out for debugging.\n       ^^^^\nSyntaxError: invalid syntax\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_094230"
+    },
+    "timestamp": "2025-11-19T09:42:30.839890"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 53,
+      "service": "domain",
+      "version": "9.4.2",
+      "protocol": "tcp",
+      "original": {
+        "pn": "ISC BIND 9.4.2",
+        "name": "ISC BIND 9.4.2",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "unknown",
+      "output": "\n  File \"/home/jay/Auvap/APFA/data/temp/exploit_192.168.187.128_53_20251119_094236.py\", line 18\n    In this code, `socket.create_connection` is used to attempt a connection with the target IP and port. If the connection fails (i.e., if there's an error in creating the connection), it catches the `socket.error` exception and returns a string indicating that the connection was not successful. If the connection is successful, it outputs 'STATUS: SUCCESS' and finally closes the socket using `s.close()`.\n                                                                                                                                                                                                                                                                                                                                                                      ^\nSyntaxError: unterminated string literal (detected at line 18)\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_094236"
+    },
+    "timestamp": "2025-11-19T09:42:36.777005"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 80,
+      "service": "http",
+      "version": "2.2.8",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Apache httpd 2.2.8",
+        "name": "Apache httpd 2.2.8",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'format'",
+      "evidence": null,
+      "timestamp": "20251119_094244"
+    },
+    "timestamp": "2025-11-19T09:42:44.368700"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 111,
+      "service": "rpcbind",
+      "version": "2",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown 2",
+        "name": "unknown 2",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "unknown",
+      "output": "\n  File \"/home/jay/Auvap/APFA/data/temp/exploit_192.168.187.128_111_20251119_094251.py\", line 25\n    Please replace `'unknown'` with your actual vulnerability. In the fixed code, I used a try-except block to handle the potential socket error in case of an unsuccessful connection attempt. The time.sleep(1) in the for loop is also included to allow several attempts at establishing the connection.\n           ^^^^^^^\nSyntaxError: invalid syntax\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_094251"
+    },
+    "timestamp": "2025-11-19T09:42:51.124949"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 139,
+      "service": "netbios-ssn",
+      "version": "3.X - 4.X",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Samba smbd 3.X - 4.X",
+        "name": "Samba smbd 3.X - 4.X",
+        "cvss": 5.0
+      }
+    },
+    "success": true,
+    "details": {
+      "success": true,
+      "status": "success",
+      "output": "STATUS: SUCCESS - Connected to the target\nHTTPConnectionPool(host='netbios-ssn', port=80): Max retries exceeded with url: / (Caused by NameResolutionError(\"<urllib3.connection.HTTPConnection object at 0x73eb412f0c20>: Failed to resolve 'netbios-ssn' ([Errno -2] Name or service not known)\"))\nSTATUS: FAIL - Failed to execute the exploit\n\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_094253"
+    },
+    "timestamp": "2025-11-19T09:42:54.076176"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 445,
+      "service": "netbios-ssn",
+      "version": "3.0.20-Debian",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Samba smbd 3.0.20-Debian",
+        "name": "Samba smbd 3.0.20-Debian",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'dd'",
+      "evidence": null,
+      "timestamp": "20251119_094300"
+    },
+    "timestamp": "2025-11-19T09:43:00.926858"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 512,
+      "service": "exec",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "netkit-rsh rexecd unknown",
+        "name": "netkit-rsh rexecd unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'format'",
+      "evidence": null,
+      "timestamp": "20251119_094312"
+    },
+    "timestamp": "2025-11-19T09:43:12.086858"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 513,
+      "service": "login",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown unknown",
+        "name": "unknown unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'dd'",
+      "evidence": null,
+      "timestamp": "20251119_094319"
+    },
+    "timestamp": "2025-11-19T09:43:19.610535"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 514,
+      "service": "tcpwrapped",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown unknown",
+        "name": "unknown unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'format'",
+      "evidence": null,
+      "timestamp": "20251119_094324"
+    },
+    "timestamp": "2025-11-19T09:43:24.325075"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 1099,
+      "service": "java-rmi",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "GNU Classpath grmiregistry unknown",
+        "name": "GNU Classpath grmiregistry unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'dd'",
+      "evidence": null,
+      "timestamp": "20251119_094330"
+    },
+    "timestamp": "2025-11-19T09:43:30.235435"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 1524,
+      "service": "bindshell",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Metasploitable root shell unknown",
+        "name": "Metasploitable root shell unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'format'",
+      "evidence": null,
+      "timestamp": "20251119_094335"
+    },
+    "timestamp": "2025-11-19T09:43:35.194241"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 2049,
+      "service": "nfs",
+      "version": "2-4",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown 2-4",
+        "name": "unknown 2-4",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'dd'",
+      "evidence": null,
+      "timestamp": "20251119_094339"
+    },
+    "timestamp": "2025-11-19T09:43:39.883990"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 2121,
+      "service": "ftp",
+      "version": "1.3.1",
+      "protocol": "tcp",
+      "original": {
+        "pn": "ProFTPD 1.3.1",
+        "name": "ProFTPD 1.3.1",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'format'",
+      "evidence": null,
+      "timestamp": "20251119_094349"
+    },
+    "timestamp": "2025-11-19T09:43:49.039624"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 3306,
+      "service": "mysql",
+      "version": "5.0.51a-3ubuntu5",
+      "protocol": "tcp",
+      "original": {
+        "pn": "MySQL 5.0.51a-3ubuntu5",
+        "name": "MySQL 5.0.51a-3ubuntu5",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'format'",
+      "evidence": null,
+      "timestamp": "20251119_094357"
+    },
+    "timestamp": "2025-11-19T09:43:57.563228"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 5900,
+      "service": "vnc",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "VNC unknown",
+        "name": "VNC unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'dd'",
+      "evidence": null,
+      "timestamp": "20251119_094407"
+    },
+    "timestamp": "2025-11-19T09:44:07.093679"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 6000,
+      "service": "X11",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "unknown unknown",
+        "name": "unknown unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "unknown",
+      "output": "\n  File \"/home/jay/Auvap/APFA/data/temp/exploit_192.168.187.128_6000_20251119_094415.py\", line 1\n    To correct the issue with the faulty syntax, I will revise your script to properly import the necessary modules, connect to the target IP and port using a TCP connection, send an HTTP POST request to the \"login\" endpoint of the target, and handle any potential errors that may arise.\n       ^^^^^^^\nSyntaxError: invalid syntax\n",
+      "error": "",
+      "evidence": null,
+      "timestamp": "20251119_094415"
+    },
+    "timestamp": "2025-11-19T09:44:15.448297"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 8009,
+      "service": "ajp13",
+      "version": "unknown",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Apache Jserv unknown",
+        "name": "Apache Jserv unknown",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'format'",
+      "evidence": null,
+      "timestamp": "20251119_094422"
+    },
+    "timestamp": "2025-11-19T09:44:22.403349"
+  },
+  {
+    "target": {
+      "ip": "192.168.187.128",
+      "port": 8180,
+      "service": "http",
+      "version": "1.1",
+      "protocol": "tcp",
+      "original": {
+        "pn": "Apache Tomcat/Coyote JSP engine 1.1",
+        "name": "Apache Tomcat/Coyote JSP engine 1.1",
+        "cvss": 5.0
+      }
+    },
+    "success": false,
+    "details": {
+      "success": false,
+      "status": "security_violation",
+      "output": "",
+      "error": "Security Violation: Forbidden command pattern detected: 'dd'",
+      "evidence": null,
+      "timestamp": "20251119_094429"
+    },
+    "timestamp": "2025-11-19T09:44:29.460439"
+  }
+]

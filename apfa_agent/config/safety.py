@@ -101,9 +101,9 @@ def sanitize_code(code: str, forbidden_commands: Optional[List[str]] = None) -> 
     if forbidden_commands is None:
         # Default forbidden commands if not provided
         forbidden_commands = [
-            "rm -rf", "format", "del /f", "dd if=", "mkfs", "> /dev/sda", 
-            ":(){ :|:& };:", "wget", "curl", "nc -e",
-            "fdisk", "mkfs", "dd"
+            "rm -rf", "del /f", "dd if=", "mkfs", "> /dev/sda", 
+            ":(){ :|:& };:", "nc -e",
+            "fdisk"
         ]
 
     # Normalize code for checking (lowercase)

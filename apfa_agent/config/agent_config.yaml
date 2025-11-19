@@ -28,6 +28,24 @@ agent:
 llm:
   # List of models to try (in priority order)
   models:
+    - name: "dolphin-phi"
+      provider: "ollama"
+      model: "dolphin-phi"
+      endpoint: "http://localhost:11434"
+      temperature: 0.1
+      max_tokens: 8192
+      timeout: 120
+      enabled: true
+
+    - name: "dolphin-llama3"
+      provider: "ollama"
+      model: "dolphin-llama3"
+      endpoint: "http://localhost:11434"
+      temperature: 0.1
+      max_tokens: 8192
+      timeout: 120
+      enabled: true
+
     - name: "local-llama3"
       provider: "ollama"
       model: "llama3"

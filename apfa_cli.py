@@ -347,7 +347,127 @@ def handle_workflow(args):
         )
         handle_classify(cls_args)
 
+
+def get_user_input(prompt_text, default_value=None):
+    """Helper to get input with default value"""
+    if default_value:
+        prompt = f"{prompt_text} [{default_value}]: "
+    else:
+        prompt = f"{prompt_text}: "
+    
+    try:
+        value = input(prompt).strip()
+    except EOFError:
+        return default_value if default_value else ""
+
+    if not value and default_value:
+        return default_value
+    return value
+
+def interactive_menu():
+    """Main interactive menu loop"""
+    while True:
+        try:
+            banner()
+            print("1. Setup (Configure Target/API)")
+            print("2. Scan (Run Nmap)")
+            print("3. Classify (Process Scan Data)")
+            print("4. Attack (Launch Agent)")
+            print("5. Workflow (Run Automation Chains)")
+            print("6. Exit")
+            
+            choice = input("\nSelect an option [1-6]: ").strip()
+            
+            config = load_config()
+            default_target = config.get('target', {}).get('ip', '127.0.0.1')
+            
+            if choice == '1': # Setup
+                handle_setup(argparse.Namespace(dry_run=False))
+                input("\nPress Enter to return to menu...")
+                
+            elif choice == '2': # Scan
+                target = get_user_input("Target IP", default_target)
+                handle_scan(argparse.Namespace(target=target, output=None, dry_run=False))
+                input("\nPress Enter to return to menu...")
+                
+            elif choice == '3': # Classify
+                input_file = get_user_input("Input file (.nessus/.json)")
+                if not input_file:
+                    print("Input file is required.")
+                    input("\nPress Enter to return to menu...")
+                    continue
+                output_file = get_user_input("Output file (optional)")
+                
+                handle_classify(argparse.Namespace(
+                    input_file=input_file,
+                    output=output_file if output_file else None,
+                    config=None,
+                    init_config=False,
+                    dry_run=False
+                ))
+                input("\nPress Enter to return to menu...")
+
+            elif choice == '4': # Attack
+                mode = get_user_input("Mode (llm-only/hybrid/train/eval)", "llm-only")
+                target = get_user_input("Target IP", default_target)
+                input_file = get_user_input("Input vulnerabilities JSON (optional)")
+                
+                handle_attack(argparse.Namespace(
+                    mode=mode,
+                    target=target,
+                    input_file=input_file if input_file else None,
+                    dry_run=False
+                ))
+                input("\nPress Enter to return to menu...")
+                
+            elif choice == '5': # Workflow
+                wf_type = get_user_input("Workflow Type (full/ingest)", "full")
+                
+                if wf_type == 'full':
+                    target = get_user_input("Target IP", default_target)
+                    handle_workflow(argparse.Namespace(
+                        type='full',
+                        target=target,
+                        nessus_file=None,
+                        dry_run=False
+                    ))
+                elif wf_type == 'ingest':
+                    nessus = get_user_input("Nessus File Path")
+                    if not nessus:
+                        print("Nessus file required.")
+                        input("\nPress Enter to return to menu...")
+                        continue
+                    handle_workflow(argparse.Namespace(
+                        type='ingest',
+                        target=None,
+                        nessus_file=nessus,
+                        dry_run=False
+                    ))
+                else:
+                    print("Invalid workflow type.")
+                
+                input("\nPress Enter to return to menu...")
+                
+            elif choice == '6':
+                print("Exiting...")
+                break
+            else:
+                print("Invalid selection.")
+                input("\nPress Enter to return to menu...")
+                
+        except KeyboardInterrupt:
+            print("\nExiting...")
+            break
+        except Exception as e:
+            logger.error(f"An error occurred: {e}")
+            input("\nPress Enter to continue...")
+
 def main():
+    # Check for interactive mode first
+    if len(sys.argv) == 1:
+        interactive_menu()
+        return
+
     parser = argparse.ArgumentParser(
         description="DeepExploit Hybrid - Unified CLI",
         formatter_class=argparse.RawTextHelpFormatter
