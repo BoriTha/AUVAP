@@ -116,6 +116,93 @@ def get_agent_functions():
 
 # --- Command Handlers ---
 
+def apply_vuln_filters(vulns, filters):
+    """
+    Apply filters to vulnerability list
+    
+    Supports:
+    - Port filters: include_ports, exclude_ports
+    - CVSS filters: cvss_min, cvss_max
+    - Severity filters: include_severity, exclude_severity
+    - Host filters: include_hosts, exclude_hosts
+    - CVE filters: has_cve, exclude_cve
+    - Exception conditions: except_if
+    """
+    result = vulns[:]
+    
+    for filter_def in filters:
+        filtered = []
+        
+        for v in result:
+            include = True
+            
+            # Extract vulnerability fields
+            port = v.get('p', 0)
+            cvss = v.get('cvss', 0.0)
+            severity = v.get('s', 0)
+            host = v.get('h', '')
+            cve = v.get('c', '')
+            
+            # Apply include filters (if specified, only keep matching)
+            if 'include_ports' in filter_def:
+                include = include and (port in filter_def['include_ports'])
+            
+            if 'include_severity' in filter_def:
+                include = include and (severity in filter_def['include_severity'])
+            
+            if 'include_hosts' in filter_def:
+                include = include and (host in filter_def['include_hosts'])
+            
+            if 'cvss_min' in filter_def:
+                include = include and (cvss >= filter_def['cvss_min'])
+            
+            if 'cvss_max' in filter_def:
+                include = include and (cvss <= filter_def['cvss_max'])
+            
+            if 'has_cve' in filter_def and filter_def['has_cve']:
+                include = include and bool(cve)
+            
+            # Apply exclude filters
+            if include and 'exclude_ports' in filter_def:
+                if port in filter_def['exclude_ports']:
+                    include = False
+                    
+                    # Check exception conditions
+                    if 'except_if' in filter_def:
+                        exc = filter_def['except_if']
+                        
+                        if 'cvss_min' in exc and cvss >= exc['cvss_min']:
+                            include = True
+                        elif 'cvss_max' in exc and cvss <= exc['cvss_max']:
+                            include = True
+                        elif 'severity' in exc and severity in exc['severity']:
+                            include = True
+                        elif 'has_cve' in exc and exc['has_cve'] and cve:
+                            include = True
+            
+            if include and 'exclude_severity' in filter_def:
+                if severity in filter_def['exclude_severity']:
+                    include = False
+                    
+                    # Check exception conditions
+                    if 'except_if' in filter_def:
+                        exc = filter_def['except_if']
+                        if 'cvss_min' in exc and cvss >= exc['cvss_min']:
+                            include = True
+            
+            if include and 'exclude_hosts' in filter_def:
+                include = include and (host not in filter_def['exclude_hosts'])
+            
+            if include and 'exclude_cve' in filter_def:
+                include = include and (cve != filter_def['exclude_cve'])
+            
+            if include:
+                filtered.append(v)
+        
+        result = filtered
+    
+    return result
+
 def handle_scoped_pentest(args):
     print("\n>>> Scoped Pentest Mode (Interactive)")
     
@@ -170,7 +257,52 @@ def handle_scoped_pentest(args):
         if input_path.endswith('.nessus'):
             print(f"Parsing Nessus file: {input_path}")
             processor = VulnProcessor(input_path)
-            vulns = processor.get_for_llm(fields=["id", "pn", "d", "c", "cvss", "s", "p", "h", "plugin_name", "description"])
+            vulns = processor.get_for_llm(fields=["id", "pn", "d", "c", "cvss", "s", "p", "h", "plugin_name", "description", "sol"])
+            print(f"Successfully parsed {len(vulns)} vulnerabilities from Nessus file")
+        elif input_path.endswith('.xml'):
+            print(f"Parsing Nmap XML file: {input_path}")
+            # For Nmap XML, we need to convert it to vulnerability format
+            # This is a simplified version - Nmap doesn't have vulns like Nessus
+            # We'll create synthetic vulnerability records from open ports
+            import xml.etree.ElementTree as ET
+            tree = ET.parse(input_path)
+            root = tree.getroot()
+            
+            vulns = []
+            for host in root.findall('.//host'):
+                addr_elem = host.find('.//address[@addrtype="ipv4"]')
+                if addr_elem is None:
+                    continue
+                ip_addr = addr_elem.get('addr', 'unknown')
+                
+                for port_elem in host.findall('.//port'):
+                    state = port_elem.find('state')
+                    if state is not None and state.get('state') == 'open':
+                        port_num = int(port_elem.get('portid', 0))
+                        service = port_elem.find('service')
+                        service_name = service.get('name', 'unknown') if service is not None else 'unknown'
+                        service_product = service.get('product', '') if service is not None else ''
+                        service_version = service.get('version', '') if service is not None else ''
+                        
+                        # Create a synthetic vulnerability record for each open port
+                        vuln = {
+                            'id': f'nmap_{ip_addr}_{port_num}',
+                            'h': ip_addr,
+                            'p': port_num,
+                            's': 1,  # Low severity by default (just open port)
+                            'pn': f'{service_name} Service Detection',
+                            'c': '',
+                            'cvss': 0.0,
+                            'd': f'Open port detected: {port_num}/{service_name}. Product: {service_product} {service_version}',
+                            'sol': 'Review if this service should be exposed'
+                        }
+                        vulns.append(vuln)
+            
+            print(f"Successfully parsed {len(vulns)} open ports from Nmap XML file")
+            if len(vulns) == 0:
+                print("Warning: No open ports found in Nmap scan. Make sure the XML file is valid.")
+                logger.warning("No vulnerabilities found in XML file")
+                return
         elif input_path.endswith('.json'):
             print(f"Loading JSON file: {input_path}")
             with open(input_path, 'r') as f:
@@ -182,8 +314,15 @@ def handle_scoped_pentest(args):
                         vulns.extend(data['vulnerabilities'][sev])
                 elif isinstance(data, dict):
                     vulns = [data]
+            print(f"Successfully loaded {len(vulns)} vulnerabilities from JSON file")
+        else:
+            logger.error(f"Unsupported file format: {input_path}")
+            logger.error("Supported formats: .nessus, .xml (Nmap), .json")
+            return
     except Exception as e:
         logger.error(f"Failed to load: {e}")
+        import traceback
+        traceback.print_exc()
         return
 
     # Classify (if needed) - Assuming we want enriched data for decision making
@@ -192,28 +331,255 @@ def handle_scoped_pentest(args):
     # Prompt says: "Run VulnerabilityClassifier to find pentestable candidates."
     classifier = VulnerabilityClassifier(enable_rag=False)
     print("Classifying candidates...")
-    vulns = classifier.classify_batch(vulns)
-
-    # 2. Interactive Selection
-    print("\n--- Candidate Vulnerabilities ---")
-    print(f"{'ID':<5} | {'Sev':<8} | {'Port':<6} | {'Name'}")
-    print("-" * 60)
+    classified_results = classifier.classify_batch(vulns)
     
-    # Store map for easy retrieval
-    vuln_map = {}
-    display_list = []
+    # Extract original vulnerability data from classification results
+    # Classifier returns: {"id": ..., "original": vuln_data, "classification": ..., "metadata": ...}
+    vulns = []
+    for result in classified_results:
+        if isinstance(result, dict) and 'original' in result:
+            # Extract original vuln and merge with classification if needed
+            vuln = result['original']
+            # Optionally add classification data for display
+            if 'classification' in result:
+                vuln['_classification'] = result['classification']
+            vulns.append(vuln)
+        else:
+            # Fallback if structure is different
+            vulns.append(result)
     
-    for i, v in enumerate(vulns):
-        vid = str(i + 1)
-        vuln_map[vid] = v
-        sev = v.get('s', 0)
-        port = v.get('p', 0)
-        name = v.get('pn', 'Unknown')[:40]
-        print(f"{vid:<5} | {sev:<8} | {port:<6} | {name}")
-        display_list.append(vid)
+    # Store original unfiltered list
+    all_vulns = vulns[:]
+    active_filters = []
 
-    print("-" * 60)
-    selection = input("\nEnter IDs to scope (comma-separated) or 'all' (b to back): ").strip()
+    # 2. Interactive Selection - Enhanced with better display and filtering
+    while True:  # Loop to allow viewing details and filtering before selection
+        print("\n--- Candidate Vulnerabilities ---")
+        print(f"Total vulnerabilities found: {len(vulns)}\n")
+        
+        # Map severity numbers to labels
+        severity_map = {0: "Info", 1: "Low", 2: "Medium", 3: "High", 4: "Critical"}
+        
+        # Store map for easy retrieval
+        vuln_map = {}
+        display_list = []
+        
+        # Enhanced display with CVE and CVSS
+        print(f"{'ID':<5} | {'Severity':<9} | {'CVSS':<5} | {'Port':<6} | {'CVE':<17} | {'Name'}")
+        print("-" * 120)
+        
+        for i, v in enumerate(vulns):
+            vid = str(i + 1)
+            vuln_map[vid] = v
+            sev_num = v.get('s', 0)
+            sev_label = severity_map.get(sev_num, 'Unknown')
+            port = v.get('p', 0)
+            cvss = v.get('cvss', 0.0)
+            cve = v.get('c', 'N/A')[:15] if v.get('c') else 'N/A'
+            name = v.get('pn', 'Unknown')[:50]
+            
+            print(f"{vid:<5} | {sev_label:<9} | {cvss:<5.1f} | {port:<6} | {cve:<17} | {name}")
+            display_list.append(vid)
+
+        print("-" * 120)
+        
+        # Show active filters
+        if active_filters:
+            print("\n🔍 Active Filters:")
+            for i, f in enumerate(active_filters, 1):
+                filter_desc = []
+                if 'include_ports' in f:
+                    filter_desc.append(f"Include ports: {f['include_ports']}")
+                if 'exclude_ports' in f:
+                    filter_desc.append(f"Exclude ports: {f['exclude_ports']}")
+                if 'cvss_min' in f:
+                    filter_desc.append(f"CVSS >= {f['cvss_min']}")
+                if 'cvss_max' in f:
+                    filter_desc.append(f"CVSS <= {f['cvss_max']}")
+                if 'include_severity' in f:
+                    sevs = [str(severity_map.get(s, s)) for s in f['include_severity']]
+                    filter_desc.append(f"Severity: {', '.join(sevs)}")
+                if 'exclude_severity' in f:
+                    sevs = [str(severity_map.get(s, s)) for s in f['exclude_severity']]
+                    filter_desc.append(f"Exclude severity: {', '.join(sevs)}")
+                if 'has_cve' in f:
+                    filter_desc.append("Has CVE")
+                if 'except_if' in f:
+                    filter_desc.append(f"EXCEPT IF: {f['except_if']}")
+                print(f"  {i}. {' | '.join(filter_desc)}")
+            print(f"  ({len(all_vulns)} total → {len(vulns)} after filters)")
+        
+        print("\nCommands:")
+        print("  Selection:")
+        print("    - Enter IDs (comma-separated): e.g., '1,3,5'")
+        print("    - 'all': Select all displayed vulnerabilities")
+        print("    - 'view <ID>': View full details (e.g., 'view 1')")
+        print("\n  Filtering:")
+        print("    - 'filter port <ports>': Include only ports (e.g., 'filter port 80,443,22')")
+        print("    - 'exclude port <ports>': Exclude ports (e.g., 'exclude port 8080,3000')")
+        print("    - 'filter cvss <min> <max>': Filter by CVSS range (e.g., 'filter cvss 7 10')")
+        print("    - 'filter cvss > <value>': CVSS greater than (e.g., 'filter cvss > 8')")
+        print("    - 'filter cvss < <value>': CVSS less than (e.g., 'filter cvss < 5')")
+        print("    - 'filter severity <levels>': critical,high,medium,low,info")
+        print("    - 'filter cve': Only show vulnerabilities with CVE")
+        print("    - 'except port <port> if cvss > <val>': Exclude port EXCEPT if CVSS high")
+        print("    - 'reset': Clear all filters")
+        print("    - 'b': Back to menu")
+        
+        selection = input("\n> ").strip()
+        
+        # Handle filter commands
+        if selection.lower().startswith('filter port '):
+            try:
+                ports_str = selection.split('filter port ')[1]
+                ports = [int(p.strip()) for p in ports_str.split(',')]
+                active_filters.append({'include_ports': ports})
+                vulns = apply_vuln_filters(all_vulns, active_filters)
+                print(f"✓ Applied port filter: {ports}")
+                input("Press Enter to continue...")
+                continue
+            except:
+                print("Usage: filter port <port1>,<port2>,...")
+                input("Press Enter to continue...")
+                continue
+        
+        if selection.lower().startswith('exclude port '):
+            # Check for exception conditions
+            if ' if cvss > ' in selection.lower():
+                try:
+                    parts = selection.split(' if cvss > ')
+                    ports_str = parts[0].split('exclude port ')[1]
+                    ports = [int(p.strip()) for p in ports_str.split(',')]
+                    cvss_threshold = float(parts[1].strip())
+                    active_filters.append({
+                        'exclude_ports': ports,
+                        'except_if': {'cvss_min': cvss_threshold}
+                    })
+                    vulns = apply_vuln_filters(all_vulns, active_filters)
+                    print(f"✓ Applied: Exclude ports {ports} EXCEPT if CVSS >= {cvss_threshold}")
+                    input("Press Enter to continue...")
+                    continue
+                except:
+                    print("Usage: except port <port> if cvss > <value>")
+                    input("Press Enter to continue...")
+                    continue
+            elif ' if severity ' in selection.lower():
+                try:
+                    parts = selection.split(' if severity ')
+                    ports_str = parts[0].split('exclude port ')[1]
+                    ports = [int(p.strip()) for p in ports_str.split(',')]
+                    sev_str = parts[1].strip().lower()
+                    sev_map_rev = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1, 'info': 0}
+                    severities = [sev_map_rev.get(s.strip(), 0) for s in sev_str.split(',')]
+                    active_filters.append({
+                        'exclude_ports': ports,
+                        'except_if': {'severity': severities}
+                    })
+                    vulns = apply_vuln_filters(all_vulns, active_filters)
+                    print(f"✓ Applied: Exclude ports {ports} EXCEPT if severity in {sev_str}")
+                    input("Press Enter to continue...")
+                    continue
+                except:
+                    print("Usage: exclude port <port> if severity <critical,high,...>")
+                    input("Press Enter to continue...")
+                    continue
+            else:
+                try:
+                    ports_str = selection.split('exclude port ')[1]
+                    ports = [int(p.strip()) for p in ports_str.split(',')]
+                    active_filters.append({'exclude_ports': ports})
+                    vulns = apply_vuln_filters(all_vulns, active_filters)
+                    print(f"✓ Applied port exclusion: {ports}")
+                    input("Press Enter to continue...")
+                    continue
+                except:
+                    print("Usage: exclude port <port1>,<port2>,...")
+                    input("Press Enter to continue...")
+                    continue
+        
+        if selection.lower().startswith('filter cvss'):
+            try:
+                if ' > ' in selection:
+                    min_cvss = float(selection.split(' > ')[1].strip())
+                    active_filters.append({'cvss_min': min_cvss})
+                    print(f"✓ Applied CVSS filter: >= {min_cvss}")
+                elif ' < ' in selection:
+                    max_cvss = float(selection.split(' < ')[1].strip())
+                    active_filters.append({'cvss_max': max_cvss})
+                    print(f"✓ Applied CVSS filter: <= {max_cvss}")
+                else:
+                    parts = selection.split('filter cvss ')[1].split()
+                    min_cvss = float(parts[0])
+                    max_cvss = float(parts[1]) if len(parts) > 1 else 10.0
+                    active_filters.append({'cvss_min': min_cvss, 'cvss_max': max_cvss})
+                    print(f"✓ Applied CVSS filter: {min_cvss} - {max_cvss}")
+                vulns = apply_vuln_filters(all_vulns, active_filters)
+                input("Press Enter to continue...")
+                continue
+            except:
+                print("Usage: filter cvss <min> <max> OR filter cvss > <val> OR filter cvss < <val>")
+                input("Press Enter to continue...")
+                continue
+        
+        if selection.lower().startswith('filter severity '):
+            try:
+                sev_str = selection.split('filter severity ')[1].strip().lower()
+                sev_map_rev = {'critical': 4, 'high': 3, 'medium': 2, 'low': 1, 'info': 0}
+                severities = [sev_map_rev.get(s.strip(), 0) for s in sev_str.split(',')]
+                active_filters.append({'include_severity': severities})
+                vulns = apply_vuln_filters(all_vulns, active_filters)
+                print(f"✓ Applied severity filter: {sev_str}")
+                input("Press Enter to continue...")
+                continue
+            except:
+                print("Usage: filter severity <critical,high,medium,low,info>")
+                input("Press Enter to continue...")
+                continue
+        
+        if selection.lower() == 'filter cve':
+            active_filters.append({'has_cve': True})
+            vulns = apply_vuln_filters(all_vulns, active_filters)
+            print("✓ Applied filter: Only vulnerabilities with CVE")
+            input("Press Enter to continue...")
+            continue
+        
+        if selection.lower() == 'reset':
+            active_filters = []
+            vulns = all_vulns[:]
+            print("✓ All filters cleared")
+            input("Press Enter to continue...")
+            continue
+        
+        # Handle 'view' command
+        if selection.lower().startswith('view '):
+            try:
+                view_id = selection.split()[1].strip()
+                if view_id in vuln_map:
+                    v = vuln_map[view_id]
+                    print("\n" + "="*80)
+                    print(f"Vulnerability Details - ID: {view_id}")
+                    print("="*80)
+                    print(f"Name:        {v.get('pn', 'Unknown')}")
+                    print(f"CVE:         {v.get('c', 'N/A')}")
+                    print(f"CVSS Score:  {v.get('cvss', 0.0)}")
+                    print(f"Severity:    {severity_map.get(v.get('s', 0), 'Unknown')} ({v.get('s', 0)})")
+                    print(f"Port:        {v.get('p', 0)}")
+                    print(f"Host:        {v.get('h', 'Unknown')}")
+                    print(f"\nDescription:\n{v.get('d', 'No description available')}")
+                    if v.get('sol'):
+                        print(f"\nSolution:\n{v.get('sol')}")
+                    print("="*80)
+                    input("\nPress Enter to continue...")
+                else:
+                    print(f"Invalid ID: {view_id}")
+                    input("Press Enter to continue...")
+            except IndexError:
+                print("Usage: view <ID>")
+                input("Press Enter to continue...")
+            continue
+        
+        # Break out of loop if valid selection or back command
+        break
     
     if selection.lower() in ['b', 'back', 'exit']:
         raise BackToMenu()
@@ -231,12 +597,18 @@ def handle_scoped_pentest(args):
         print("No targets selected. Aborting.")
         return
 
-    # 3. Extract Ports and Save Scope
-    scope_ports = sorted(list(set(int(v.get('p')) for v in selected_vulns if v.get('p'))))
+    # 3. Extract Ports, Hosts, and Save Scope
+    scope_ports = sorted(list(set(int(v.get('p', 0)) for v in selected_vulns if v.get('p', 0))))
+    
+    # Extract unique target IPs from selected vulnerabilities
+    target_hosts = sorted(list(set(v.get('h', '') for v in selected_vulns if v.get('h', ''))))
+    
     print(f"\nScoped Ports: {scope_ports}")
+    print(f"Target Host(s): {', '.join(target_hosts) if target_hosts else 'None detected'}")
     
     scope_data = {
         'ports': scope_ports,
+        'hosts': target_hosts,
         'vulnerabilities': selected_vulns,
         'created_at': datetime.now().isoformat()
     }
@@ -254,8 +626,22 @@ def handle_scoped_pentest(args):
     llm_only_mode, train_mode, hybrid_mode, eval_mode = get_agent_functions()
     config = load_config()
     
-    # Ensure target is set
-    target = args.target or config.get('target', {}).get('ip')
+    # Determine target IP - prioritize: args > extracted from vulns > config > user input
+    target = args.target
+    
+    if not target and target_hosts:
+        # Use the first target host from the vulnerabilities
+        target = target_hosts[0]
+        print(f"\nAuto-detected target IP from scan data: {target}")
+        if len(target_hosts) > 1:
+            print(f"Note: Multiple hosts detected: {', '.join(target_hosts)}")
+            confirm = input(f"Use {target} as primary target? (y/n): ").strip().lower()
+            if confirm != 'y':
+                target = get_user_input("Enter Target IP", target_hosts[0])
+    
+    if not target:
+        target = config.get('target', {}).get('ip')
+    
     if not target:
         target = get_user_input("Enter Target IP")
     
@@ -376,8 +762,47 @@ def handle_classify(args):
         if input_path.endswith('.nessus'):
             print(f"Parsing Nessus file: {input_path}")
             processor = VulnProcessor(input_path)
-            # Get fields compatible with classifier
-            vulns = processor.get_for_llm(fields=["id", "pn", "d", "c", "cvss", "s", "p", "h", "plugin_name", "description"])
+            # Get fields compatible with classifier - include 'sol' for solution info
+            vulns = processor.get_for_llm(fields=["id", "pn", "d", "c", "cvss", "s", "p", "h", "plugin_name", "description", "sol"])
+            print(f"Successfully parsed {len(vulns)} vulnerabilities")
+        elif input_path.endswith('.xml'):
+            print(f"Parsing Nmap XML file: {input_path}")
+            # Convert Nmap XML to vulnerability format
+            import xml.etree.ElementTree as ET
+            tree = ET.parse(input_path)
+            root = tree.getroot()
+            
+            vulns = []
+            for host in root.findall('.//host'):
+                addr_elem = host.find('.//address[@addrtype="ipv4"]')
+                if addr_elem is None:
+                    continue
+                ip_addr = addr_elem.get('addr', 'unknown')
+                
+                for port_elem in host.findall('.//port'):
+                    state = port_elem.find('state')
+                    if state is not None and state.get('state') == 'open':
+                        port_num = int(port_elem.get('portid', 0))
+                        service = port_elem.find('service')
+                        service_name = service.get('name', 'unknown') if service is not None else 'unknown'
+                        service_product = service.get('product', '') if service is not None else ''
+                        service_version = service.get('version', '') if service is not None else ''
+                        
+                        # Create a synthetic vulnerability record for each open port
+                        vuln = {
+                            'id': f'nmap_{ip_addr}_{port_num}',
+                            'h': ip_addr,
+                            'p': port_num,
+                            's': 1,  # Low severity by default
+                            'pn': f'{service_name} Service Detection',
+                            'c': '',
+                            'cvss': 0.0,
+                            'd': f'Open port: {port_num}/{service_name}. Product: {service_product} {service_version}',
+                            'sol': 'Review if this service should be exposed'
+                        }
+                        vulns.append(vuln)
+            
+            print(f"Successfully parsed {len(vulns)} open ports from Nmap XML")
         elif input_path.endswith('.json'):
             print(f"Loading JSON file: {input_path}")
             with open(input_path, 'r') as f:
@@ -390,12 +815,15 @@ def handle_classify(args):
                         vulns.extend(data['vulnerabilities'][sev])
                 elif isinstance(data, dict):
                     vulns = [data]
+            print(f"Successfully loaded {len(vulns)} vulnerabilities from JSON")
         else:
-            logger.error("Unknown file format. Use .nessus or .json")
+            logger.error("Unknown file format. Supported: .nessus, .xml (Nmap), .json")
             sys.exit(1)
             
     except Exception as e:
         logger.error(f"Failed to load/parse input: {e}")
+        import traceback
+        traceback.print_exc()
         sys.exit(1)
 
     # Apply Filters

