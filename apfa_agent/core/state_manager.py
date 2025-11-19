@@ -7,8 +7,8 @@ from typing import Dict, List, Any, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
-# Constants
-TRACKED_PORTS = [
+# Constants - Default ports to track if no scan data available
+DEFAULT_TRACKED_PORTS = [
     21, 22, 23, 25, 53, 80, 110, 111, 135, 139,
     143, 443, 445, 993, 995, 1433, 1521, 3306, 3389,
     5432, 5900, 6667, 8080, 8443, 8888, 9200, 27017,
@@ -29,13 +29,27 @@ class StateManager:
         Args:
             graph: The NetworkX graph from TerrainMapper.
             apfa_data_path: Path to the APFA classified vulnerabilities JSON.
-            tracked_ports: Optional list of specific ports to track (overrides default).
+            tracked_ports: Optional list of specific ports to track (overrides dynamic discovery).
         """
         self.graph = graph
         self.apfa_data = self._load_apfa_data(apfa_data_path)
         
-        # Dynamic Port Tracking
-        self.tracked_ports = tracked_ports if tracked_ports is not None else TRACKED_PORTS
+        # Dynamic Port Discovery: Extract all open ports from the graph
+        if tracked_ports is not None:
+            # User-specified scope (e.g., for focused pentesting)
+            self.tracked_ports = tracked_ports
+            logger.info(f"Using scoped ports: {self.tracked_ports}")
+        else:
+            # Auto-discover from scan results
+            discovered_ports = self._discover_open_ports()
+            if discovered_ports:
+                self.tracked_ports = sorted(discovered_ports)
+                logger.info(f"Dynamically tracking {len(self.tracked_ports)} discovered ports: {self.tracked_ports}")
+            else:
+                # Fallback to default list
+                self.tracked_ports = DEFAULT_TRACKED_PORTS
+                logger.warning(f"No ports discovered in scan, using default list of {len(self.tracked_ports)} ports")
+        
         self.num_ports = len(self.tracked_ports)
         
         # State Vector Sizing
@@ -58,6 +72,18 @@ class StateManager:
         
         self._init_state_vector()
         self._enrich_with_apfa()
+
+    def _discover_open_ports(self) -> List[int]:
+        """Discover all open ports from the graph."""
+        open_ports = set()
+        for node, data in self.graph.nodes(data=True):
+            if data.get('type') == 'service' and data.get('state') == 'open':
+                try:
+                    port = int(data.get('port'))
+                    open_ports.add(port)
+                except (ValueError, TypeError):
+                    continue
+        return list(open_ports)
 
     def _load_apfa_data(self, path: Optional[str]) -> Dict[str, Any]:
         """Load APFA classified data if available."""

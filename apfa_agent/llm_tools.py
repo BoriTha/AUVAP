@@ -266,6 +266,7 @@ def search_exploit_db(
                         "type": exploit.get("Type"),
                         "platform": exploit.get("Platform"),
                         "path": exploit.get("Path"),
+                        "codes": exploit.get("Codes", ""),  # CVE codes
                         "url": f"https://www.exploit-db.com/exploits/{exploit.get('EDB-ID')}",
                         "source": "searchsploit"
                     })

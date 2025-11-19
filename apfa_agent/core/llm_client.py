@@ -234,9 +234,102 @@ class UniversalLLMClient:
                 print("    -> Stopping execution. Please fix the LLM configuration.")
                 sys.exit(1)
 
-    def generate_code(self, prompt: str) -> str:
+    def _gather_tool_context(self, target_info: Dict) -> str:
+        """
+        Gather context from external tools (NVD, Exploit-DB, MSF).
+        
+        Returns enriched context string to inject into prompt.
+        """
+        try:
+            from apfa_agent.llm_tools import (
+                search_msf_modules,
+                NVDClient,
+                search_exploit_db
+            )
+        except ImportError:
+            logger.warning("llm_tools not available, skipping tool calling")
+            return ""
+        
+        context_parts = []
+        service = target_info.get('service', '')
+        version = target_info.get('version', '')
+        port = target_info.get('port')
+        cve = target_info.get('cve')
+        
+        logger.info("[TOOL CALLING] Gathering intelligence from external sources...")
+        
+        # Tool 1: Search Metasploit
+        try:
+            msf_modules = search_msf_modules(
+                service=service,
+                version=version,
+                port=port,
+                cve=cve
+            )
+            if msf_modules:
+                context_parts.append("=== METASPLOIT MODULES FOUND ===")
+                for mod in msf_modules[:3]:  # Limit to top 3
+                    context_parts.append(f"Module: {mod.get('module', 'N/A')}")
+                    context_parts.append(f"Reliability: {mod.get('reliability', 'unknown')}")
+                    if mod.get('payload'):
+                        context_parts.append(f"Payload: {mod.get('payload')}")
+                context_parts.append("")
+        except Exception as e:
+            logger.warning(f"MSF search failed: {e}")
+        
+        # Tool 2: Query CVE Database (if CVE known)
+        if cve:
+            try:
+                nvd_client = NVDClient()
+                cve_data = nvd_client.query_cve(cve)
+                if cve_data:
+                    context_parts.append("=== CVE DETAILS (NVD) ===")
+                    context_parts.append(f"CVE: {cve_data['cve_id']}")
+                    context_parts.append(f"CVSS: {cve_data.get('cvss_v3') or cve_data.get('cvss_v2', 'N/A')}")
+                    context_parts.append(f"Severity: {cve_data.get('severity', 'N/A')}")
+                    context_parts.append(f"Description: {cve_data.get('description', 'N/A')[:200]}...")
+                    if cve_data.get('references'):
+                        context_parts.append(f"References: {', '.join(cve_data['references'][:2])}")
+                    context_parts.append("")
+            except Exception as e:
+                logger.warning(f"NVD query failed: {e}")
+        
+        # Tool 3: Search Exploit-DB
+        try:
+            exploits = search_exploit_db(
+                service=service,
+                cve=cve,
+                platform="linux"
+            )
+            if exploits:
+                context_parts.append("=== EXPLOIT-DB RESULTS ===")
+                for exp in exploits[:3]:  # Limit to top 3
+                    context_parts.append(f"EDB-{exp.get('edb_id')}: {exp.get('title', 'N/A')}")
+                    context_parts.append(f"  Platform: {exp.get('platform')}, Type: {exp.get('type')}")
+                    context_parts.append(f"  URL: {exp.get('url')}")
+                context_parts.append("")
+        except Exception as e:
+            logger.warning(f"Exploit-DB search failed: {e}")
+        
+        if context_parts:
+            header = "\n=== EXTERNAL INTELLIGENCE (Use this information!) ==="
+            footer = "=== END INTELLIGENCE ===\n"
+            return header + "\n" + "\n".join(context_parts) + footer
+        
+        return ""
+
+    def generate_code(self, prompt: str, target_info: Optional[Dict] = None, use_tools: bool = True) -> str:
         """
         Generate code from the LLM.
+        
+        Args:
+            prompt: The generation prompt
+            target_info: Optional dict with target details (for tool calling)
+                - service: Service name (e.g., "vsftpd")
+                - version: Service version (e.g., "2.3.4")
+                - port: Port number
+                - cve: CVE identifier (if known)
+            use_tools: Whether to use external tools (NVD, Exploit-DB, MSF search)
         """
         # Return dummy immediately if already switched
         if self.use_dummy:
@@ -258,6 +351,12 @@ class UniversalLLMClient:
             if self._prompt_user_fallback("litellm library not found (pip install litellm)"):
                 self.use_dummy = True
                 return self._get_dummy_exploit()
+        
+        # TOOL CALLING: Enrich prompt with external data
+        if use_tools and target_info:
+            tool_context = self._gather_tool_context(target_info)
+            if tool_context:
+                prompt = f"{prompt}\n\n{tool_context}"
         
         try:
             # self.model is guaranteed to be str here because of check above

@@ -1,0 +1,32 @@
+{
+  "metadata": {
+    "mode": "hybrid",
+    "target_ip": "192.168.79.128",
+    "scan_date": "2025-11-19T12:56:10.066201",
+    "agent_model": "ppo_metasploitable"
+  },
+  "scan_results": {
+    "total_ports": 0,
+    "services": []
+  },
+  "exploitation_results": {
+    "total_attempts": 0,
+    "successful_exploits": 0,
+    "success_rate": 0.0,
+    "average_reward": 0.0,
+    "root_obtained": false,
+    "details": []
+  },
+  "skill_library_stats": {
+    "total_skills": 1,
+    "skills_used": 0,
+    "method_distribution": {
+      "llm_generate": 0,
+      "cached_skill": 0,
+      "metasploit": 0
+    }
+  },
+  "compromised_services": [],
+  "attack_history": [],
+  "llm_stats": {}
+}

@@ -91,6 +91,10 @@ class CowboyExecutor:
                 result["status"] = "success"
                 logger.info(f"✓ Exploit succeeded for {target_ip}:{port}")
                 
+                # 4.5. Extract detailed exploit information
+                exploit_details = self._extract_exploit_details(stdout)
+                result.update(exploit_details)
+                
                 # 5. Post-Exploitation (if successful)
                 self._handle_post_exploitation(target_ip, port, stdout, result)
                 
@@ -120,6 +124,41 @@ class CowboyExecutor:
                     pass
                     
         return result
+
+    def _extract_exploit_details(self, output: str) -> Dict[str, Any]:
+        """
+        Extract detailed information from exploit output.
+        Looks for patterns like:
+        - EXPLOIT: <description>
+        - COMMAND: <cmd>
+        - CREDENTIALS: <user:pass>
+        - ACCESS: <level>
+        """
+        details = {}
+        
+        for line in output.splitlines():
+            line = line.strip()
+            
+            if line.startswith("EXPLOIT:"):
+                details["exploit_method"] = line.split("EXPLOIT:")[1].strip()
+                
+            elif line.startswith("COMMAND:"):
+                cmd = line.split("COMMAND:")[1].strip()
+                if "commands_executed" not in details:
+                    details["commands_executed"] = []
+                details["commands_executed"].append(cmd)
+                
+            elif line.startswith("CREDENTIALS:"):
+                creds = line.split("CREDENTIALS:")[1].strip()
+                details["credentials"] = creds
+                
+            elif line.startswith("ACCESS:"):
+                access = line.split("ACCESS:")[1].strip()
+                details["access_level"] = access
+                if access.lower() in ["root", "administrator"]:
+                    details["root_access"] = True
+        
+        return details
 
     def _handle_post_exploitation(self, target_ip: str, port: int, output: str, result: Dict[str, Any]):
         """

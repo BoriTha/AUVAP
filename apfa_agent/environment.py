@@ -414,17 +414,23 @@ class PentestingEnv(gym.Env):
             if vuln:
                 prompt += f"Vulnerability: {vuln.get('original', {}).get('name', 'Unknown')}\n"
         
-        # 3. Generate Code
-        code = self.llm_client.generate_code(prompt)
+        # 3. Generate Code (with tool calling enabled)
+        target_info = {
+            'service': service_sig.split()[0] if service_sig else '',
+            'version': service_sig.split()[1] if len(service_sig.split()) > 1 else '',
+            'port': port,
+            'cve': vuln.get('cve') if vuln else None
+        }
+        code = self.llm_client.generate_code(prompt, target_info=target_info, use_tools=True)
         
         # 4. Execute
         result = self.executor.execute(code, target_ip, port)
         
-        # 5. Retry Logic
+        # 5. Retry Logic (without re-querying tools to save time)
         if not result['success'] and result['status'] != 'security_violation':
             print("⚠️  Exploit failed, attempting retry...")
             retry_prompt = ERROR_RETRY_PROMPT.format(error=result.get('output', 'Unknown error'))
-            code = self.llm_client.generate_code(retry_prompt)
+            code = self.llm_client.generate_code(retry_prompt, target_info=target_info, use_tools=False)
             result = self.executor.execute(code, target_ip, port)
             
         if result['success']:

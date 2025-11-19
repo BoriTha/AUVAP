@@ -147,17 +147,23 @@ class SmartTriageAgent:
         else:
             prompt += f"Target: {target_ip}\nPort: {port}\nService: {service_sig}\nVulnerability: {vuln_name}\n"
             
-        # 3. Generate Code
-        code = self.llm_client.generate_code(prompt)
+        # 3. Generate Code (with tool calling enabled)
+        target_info = {
+            'service': service_sig.split()[0] if service_sig else '',
+            'version': target.get('version', ''),
+            'port': port,
+            'cve': target.get('cve')  # If CVE is available from classifier
+        }
+        code = self.llm_client.generate_code(prompt, target_info=target_info, use_tools=True)
         
         # 4. Execute
         result = self.executor.execute(code, target_ip, port)
         
-        # 5. Retry
+        # 5. Retry (keep tool calling enabled for retry)
         if not result['success'] and result['status'] != 'security_violation':
             print("  ⚠️  Retrying...")
             retry_prompt = ERROR_RETRY_PROMPT.format(error=result.get('output', 'Unknown error'))
-            code = self.llm_client.generate_code(retry_prompt)
+            code = self.llm_client.generate_code(retry_prompt, target_info=target_info, use_tools=False)  # Don't re-query tools on retry
             result = self.executor.execute(code, target_ip, port)
             
         return result['success'], result
