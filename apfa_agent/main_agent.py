@@ -56,6 +56,7 @@ from environment import PentestingEnv
 from rag_manager import RAGManager
 from llm_only_mode import SmartTriageAgent as LLMOnlyMode # Aliasing SmartTriageAgent
 from config.safety import is_running_in_vm, SecurityError
+from report_generator import ReportGenerator
 
 def print_banner():
     """Print ASCII art banner"""
@@ -112,12 +113,14 @@ def phase_0_scan(config: dict, force_rescan: bool = False) -> dict:
     
     # Count open ports
     open_ports = 0
+    open_port_list = []
     for host in nmap_results.get('hosts', []):
         for service in host.get('services', []):
             if service.get('state') == 'open':
                 open_ports += 1
+                open_port_list.append(service.get('port'))
                 
-    print(f"✓ Found {open_ports} open ports")
+    print(f"✓ Found {open_ports} open ports: {open_port_list}")
     
     # DEBUG: Print nmap results summary
     print(f"DEBUG: Nmap results keys: {nmap_results.keys()}")
@@ -125,6 +128,9 @@ def phase_0_scan(config: dict, force_rescan: bool = False) -> dict:
         print(f"DEBUG: Hosts found: {len(nmap_results['hosts'])}")
         for h in nmap_results['hosts']:
             print(f"DEBUG: Host {h.get('ip')} has {len(h.get('services', []))} services")
+            # Print first few services for verification
+            for svc in h.get('services', [])[:5]:
+                print(f"  DEBUG: Port {svc.get('port')} ({svc.get('service')}) - state: {svc.get('state')}")
 
     if open_ports == 0:
         print(" Warning: No open ports found. Agent may have nothing to do.")
@@ -190,56 +196,12 @@ def llm_only_mode(config: dict, config_path: str, target_ip: str = None, apfa_pa
     print("EXECUTING LLM-ONLY MODE")
     print("="*60)
     
-    # SmartTriageAgent init might need config_path
+    # SmartTriageAgent now handles report generation internally
     mode = LLMOnlyMode(config_path=config_path, config=config)
-    
-    # SmartTriageAgent.run might take apfa_path or nmap_results
-    # Checking llm_only_mode.py content again would be good, but assuming run(apfa_path) based on prompt
     results = mode.run(classified_json_path=apfa_path, nmap_results=nmap_results)
     
-    # Calculate stats for report
-    total_ports_count = 0
-    services_list = []
-    if nmap_results:
-        for host in nmap_results.get('hosts', []):
-            for svc in host.get('services', []):
-                if svc.get('state') == 'open':
-                    total_ports_count += 1
-                    services_list.append(svc)
-
-    # Generate report
-    report = {
-        'metadata': {
-            'mode': 'llm-only',
-            'target_ip': config.get('target', {}).get('ip', 'unknown'),
-            'scan_date': datetime.now().isoformat()
-        },
-        'scan_results': {
-            'total_ports': total_ports_count,
-            'services': services_list
-        },
-        'exploitation_results': {
-            'total_attempts': len(results),
-            'successful_exploits': sum(1 for r in results if r.get('success', False)),
-            'success_rate': sum(1 for r in results if r.get('success', False)) / max(len(results), 1)
-        },
-        'results': results
-    }
-    
-    # Save report
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    report_path = os.path.join(project_root, f"data/agent_results/llm_only_report_{timestamp}.json")
-    Path(report_path).parent.mkdir(parents=True, exist_ok=True)
-    
-    with open(report_path, 'w') as f:
-        json.dump(report, f, indent=2)
-    
-    print(f"\nReport saved: {report_path}")
-    print(f"\nSummary:")
-    print(f"  Total attempts: {report['exploitation_results']['total_attempts']}")
-    print(f"  Successful: {report['exploitation_results']['successful_exploits']}")
-    print(f"  Success rate: {report['exploitation_results']['success_rate']:.1%}")
+    # NOTE: Report generation is now handled by SmartTriageAgent.run()
+    # No need to duplicate report generation here
 
 def train_mode(config: dict, config_path: str, timesteps: int = None, apfa_path: str = None):
     """Training mode: Train PPO agent"""
@@ -305,6 +267,16 @@ def train_mode(config: dict, config_path: str, timesteps: int = None, apfa_path:
     print("\nTraining complete!")
     print(f"Model saved: {ppo_agent.model_path}")
     
+    # Generate training report
+    report_gen = ReportGenerator()
+    report = report_gen.generate_train_report(
+        config=config,
+        ppo_agent=ppo_agent,
+        tool_manager=tool_mgr,
+        training_timesteps=timesteps,
+        nmap_results=nmap_results
+    )
+    
     # Print skill library stats
     tool_mgr.print_stats()
 
@@ -326,8 +298,54 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
     mapper = TerrainMapper()
     graph = mapper.build_graph(nmap_results)
     
+    # DEBUG: Verify graph was built correctly
+    print(f"\nDEBUG: Graph built with {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges")
+    service_nodes = [n for n, d in graph.nodes(data=True) if d.get('type') == 'service']
+    open_services = [n for n, d in graph.nodes(data=True) if d.get('type') == 'service' and d.get('state') == 'open']
+    print(f"DEBUG: Service nodes: {len(service_nodes)}, Open services: {len(open_services)}")
+    
     # Initialize StateManager with scoped ports if provided
     state_mgr = StateManager(graph=graph, apfa_data_path=apfa_path, tracked_ports=scoped_ports)
+    
+    # CRITICAL: Validate that scoped ports are actually exploitable
+    available_actions = state_mgr.get_available_actions()
+    if len(available_actions) == 0:
+        print("\n" + "="*60)
+        print("⚠️  ERROR: No exploitable ports available!")
+        print("="*60)
+        if scoped_ports:
+            print(f"Scoped ports requested: {scoped_ports}")
+        print(f"Tracked ports: {state_mgr.tracked_ports}")
+        open_service_ports = sorted([int(d.get('port')) for n,d in graph.nodes(data=True) 
+                                     if d.get('type')=='service' and d.get('state')=='open'])
+        print(f"Ports found in Nmap scan: {open_service_ports}")
+        
+        print("\n🔍 Possible causes:")
+        print("1. Scoped ports from vulnerability scan don't match current network state")
+        print("2. Ports were closed/filtered between vulnerability scan and Nmap scan")
+        print("3. Nmap scan was incomplete or filtered by firewall")
+        print("4. Using vulnerabilities from different host than target IP")
+        
+        if scoped_ports and open_service_ports:
+            print(f"\n💡 Suggestion: The following ports ARE open and exploitable:")
+            matching = [p for p in open_service_ports if p not in scoped_ports]
+            if matching:
+                print(f"   {matching[:10]}")
+                response = input("\nExpand scope to all open ports from scan? (y/N): ").strip().lower()
+                if response == 'y':
+                    print(f"✓ Expanding scope from {len(scoped_ports)} to {len(open_service_ports)} ports")
+                    # Recreate StateManager with all ports
+                    state_mgr = StateManager(graph=graph, apfa_data_path=apfa_path, tracked_ports=open_service_ports)
+                    available_actions = state_mgr.get_available_actions()
+                    print(f"✓ Now tracking {len(available_actions)} exploitable ports")
+                else:
+                    print("\n❌ Cannot proceed without exploitable ports. Exiting.")
+                    return
+        else:
+            print("\n❌ Cannot proceed without exploitable ports. Exiting.")
+            return
+    else:
+        print(f"\n✓ Ready: {len(available_actions)} exploitable ports available")
     
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     skill_lib_path = os.path.join(project_root, "data/agent_results/skill_library.json")
@@ -381,7 +399,17 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
                  print(f"Warning: Model load failed ({e}), starting fresh.")
                  ppo_agent.initialize_model(force_new=True)
         
-        action, _states = ppo_agent.model.predict(obs, deterministic=True)
+        # CRITICAL FIX: Add epsilon-greedy exploration to prevent getting stuck
+        # Use stochastic policy for first 10 steps to encourage exploration
+        import random
+        epsilon = 0.3 if step <= 10 else 0.1  # Higher exploration early on
+        if random.random() < epsilon:
+            # Random action
+            action = env.action_space.sample()
+            print(f"🎲 Exploring: Random action selected (ε={epsilon})")
+        else:
+            # Use deterministic=False for some stochasticity even when not exploring
+            action, _states = ppo_agent.model.predict(obs, deterministic=False)
         
         # Decode action for display
         try:
@@ -402,23 +430,18 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
             print("ROOT ACCESS OBTAINED!")
             break
     
-    # Generate report
-    report = generate_report(config, nmap_results, state_mgr, tool_mgr, llm, env)
+    # Generate report using shared report generator
+    report_gen = ReportGenerator()
+    report = report_gen.generate_hybrid_report(
+        config=config,
+        nmap_results=nmap_results,
+        state_manager=state_mgr,
+        tool_manager=tool_mgr,
+        llm_client=llm,
+        env=env
+    )
     
-    # Save report
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    report_path = os.path.join(project_root, f"data/agent_results/hybrid_report_{timestamp}.json")
-    
-    with open(report_path, 'w') as f:
-        json.dump(report, f, indent=2)
-    
-    print(f"\nReport saved: {report_path}")
-    print(f"\nSummary:")
-    print(f"  Total attempts: {report['exploitation_results']['total_attempts']}")
-    print(f"  Successful: {report['exploitation_results']['successful_exploits']}")
-    print(f"  Success rate: {report['exploitation_results']['success_rate']:.1%}")
-    print(f"  Skills in library: {report['skill_library_stats']['total_skills']}")
+    # Print method usage stats
     print(f"  Method usage: LLM={env.method_stats.get('llm_generate',0)}, "
           f"Cached={env.method_stats.get('cached_skill',0)}, MSF={env.method_stats.get('metasploit',0)}")
 
@@ -465,91 +488,35 @@ def eval_mode(config: dict, config_path: str, n_episodes: int = 10, apfa_path: s
     
     print(f"\nRunning {n_episodes} evaluation episodes...\n")
     
-    # Assuming evaluate method exists
-    ppo_agent.evaluate(n_episodes=n_episodes)
+    # Evaluate agent
+    eval_results = ppo_agent.evaluate(n_episodes=n_episodes)
+    
+    # Generate evaluation report
+    report_gen = ReportGenerator()
+    report = report_gen.generate_eval_report(
+        config=config,
+        eval_results=eval_results,
+        n_episodes=n_episodes,
+        tool_manager=tool_mgr
+    )
 
 def generate_report(config, nmap_results, state_mgr, tool_mgr, llm, env) -> dict:
-    """Generate comprehensive report"""
-    stats = state_mgr.get_statistics()
+    """
+    DEPRECATED: Use ReportGenerator.generate_hybrid_report() instead.
     
-    # Enhanced Reporting for Successful Exploits
-    successful_exploits_details = []
-    compromised_ports = stats.get('compromised_ports', [])
+    This function is kept for backward compatibility but is no longer used.
+    All modes now use the shared ReportGenerator class for consistent reporting.
+    """
+    import warnings
+    warnings.warn(
+        "generate_report() is deprecated. Use ReportGenerator.generate_hybrid_report() instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
     
-    # Iterate through known skills to find details for compromised ports
-    for port in compromised_ports:
-        # Find skill for this port
-        # ToolManager stores skills by signature, not port directly, but we can search
-        # Or we use state_mgr mappings.
-        # Actually tool_mgr.skills is dict by signature.
-        # We can check recent skills added.
-        
-        # Better strategy: Check state_mgr.port_to_vuln for vuln details
-        vuln = state_mgr.port_to_vuln.get(port, {})
-        
-        # Try to find the successful skill
-        signature = state_mgr.get_service_signature(state_mgr.tracked_ports.index(port) if port in state_mgr.tracked_ports else -1)
-        skill = tool_mgr.skills.get(signature)
-        
-        exploit_detail = {
-            "port": port,
-            "service": signature,
-            "vulnerability_details": {
-                "name": vuln.get("pn", "Unknown"),
-                "cve": vuln.get("c", "N/A"),
-                "severity": vuln.get("s", "Unknown")
-            },
-            "access_level": "Root/System" if env.root_obtained else "User/Service", # Approximation
-            "replication_steps": "N/A"
-        }
-        
-        if skill:
-            if skill.get('type') == 'metasploit':
-                exploit_detail['replication_steps'] = f"Metasploit Module: {skill.get('module')}\nOptions: RHOSTS=<target>, RPORT={port}"
-            else:
-                 # Custom script
-                 code = skill.get('code', '')
-                 exploit_detail['replication_steps'] = f"Execute Python Script:\n{code[:200]}..." # Truncated for brevity in JSON but full code is available
-                 exploit_detail['full_code'] = code
-
-        successful_exploits_details.append(exploit_detail)
-
-    # Extract open ports for report
-    open_ports_list = []
-    if nmap_results and 'hosts' in nmap_results:
-        for host in nmap_results['hosts']:
-            for service in host.get('services', []):
-                if service.get('state') == 'open':
-                    open_ports_list.append(service)
-
-    return {
-        'metadata': {
-            'mode': 'hybrid',
-            'target_ip': config.get('target', {}).get('ip'),
-            'scan_date': datetime.now().isoformat(),
-            'agent_model': config.get('agent', {}).get('model_name')
-        },
-        'scan_results': {
-            'total_ports': len(open_ports_list),
-            'services': open_ports_list
-        },
-        'exploitation_results': {
-            'total_attempts': stats.get('total_attempts', 0),
-            'successful_exploits': stats.get('successful_exploits', 0),
-            'success_rate': stats.get('success_rate', 0.0),
-            'average_reward': stats.get('average_reward', 0.0),
-            'root_obtained': env.root_obtained,
-            'details': successful_exploits_details
-        },
-        'skill_library_stats': {
-            'total_skills': len(tool_mgr.skills),
-            'skills_used': env.method_stats.get('cached_skill', 0),
-            'method_distribution': env.method_stats
-        },
-        'compromised_services': compromised_ports,
-        'attack_history': state_mgr.action_history,
-        'llm_stats': llm.stats if hasattr(llm, 'stats') else {}
-    }
+    # Delegate to new report generator
+    report_gen = ReportGenerator()
+    return report_gen.generate_hybrid_report(config, nmap_results, state_mgr, tool_mgr, llm, env)
 
 def main():
     """Main entry point"""

@@ -68,15 +68,33 @@ class MetasploitWrapper:
     def get_module_info(self, service_signature: str) -> Optional[Dict]:
         """
         Get module information with priority:
-        1. Manual mapping (highest trust)
+        1. Manual mapping (highest trust) - FUZZY MATCH
         2. Auto-discovered (agent learned)
         3. Auto-discover now (search MSF database)
         """
         sig_lower = service_signature.lower()
         
-        # Check manual mapping first
+        # EXACT MATCH: Check manual mapping first
         if sig_lower in self.module_map:
             return {**self.module_map[sig_lower], 'source': 'manual'}
+        
+        # FUZZY MATCH: Try substring/partial matches for manual mappings
+        # Example: "samba smbd 3.0.20-debian" matches "samba 3.0.20"
+        for key in self.module_map.keys():
+            # Extract product and version from both sides
+            sig_parts = sig_lower.split()
+            key_parts = key.split()
+            
+            if len(sig_parts) >= 2 and len(key_parts) >= 2:
+                # Match if first word and version prefix match
+                # "samba" in "samba smbd" AND "3.0.20" in "3.0.20-debian"
+                if (sig_parts[0] == key_parts[0] or key_parts[0] in sig_lower):
+                    # Check version match (fuzzy)
+                    for sig_part in sig_parts[1:]:
+                        for key_part in key_parts[1:]:
+                            if sig_part.startswith(key_part) or key_part in sig_part:
+                                print(f"🔍 Fuzzy match: '{sig_lower}' → '{key}'")
+                                return {**self.module_map[key], 'source': 'manual_fuzzy'}
         
         # Check auto-discovered
         if sig_lower in self.auto_discovered:
@@ -109,10 +127,24 @@ class MetasploitWrapper:
             return None
         
         try:
-            # Extract product and version
+            # Extract product and version (smarter parsing)
             parts = service_signature.lower().split()
-            product = parts[0] if parts else ""
-            version = parts[1] if len(parts) > 1 else ""
+            
+            # Find version by looking for pattern like X.X.X or X.X
+            import re
+            version = ""
+            product_parts = []
+            
+            for part in parts:
+                # Check if this looks like a version number
+                if re.match(r'^\d+\.[\d\w\.\-]+', part):  # Matches: 2.2.8, 3.0.20-debian, 4.7p1
+                    version = part
+                    break
+                else:
+                    product_parts.append(part)
+            
+            # Product is everything before the version
+            product = " ".join(product_parts) if product_parts else parts[0] if parts else ""
             
             # Build search queries (specific → generic)
             search_queries = []

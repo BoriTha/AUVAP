@@ -10,6 +10,7 @@ from apfa_agent.llm_ranker import LLMRanker
 from apfa_agent.tool_manager import ToolManager
 from apfa_agent.rag_manager import RAGManager
 from apfa_agent.prompts import SYSTEM_PROMPT, RAG_CONTEXT_PROMPT, ERROR_RETRY_PROMPT
+from apfa_agent.report_generator import ReportGenerator
 
 logger = logging.getLogger(__name__)
 
@@ -39,9 +40,7 @@ class SmartTriageAgent:
         self.ranker = LLMRanker(ranking_strategy="easy_first")
         self.tool_manager = ToolManager()
         self.rag_manager = RAGManager() # Assuming it exists
-        
-        self.results_dir = Path("data/agent_results")
-        self.results_dir.mkdir(parents=True, exist_ok=True)
+        self.report_generator = ReportGenerator("data/agent_results")
 
     def run(self, classified_json_path: Optional[str] = None, nmap_results: Optional[Dict] = None):
         """
@@ -116,8 +115,14 @@ class SmartTriageAgent:
             else:
                 print("❌ FAILED.")
                 
-        # 3. Generate Report
-        self._generate_report(results)
+        # 3. Generate Report using shared report generator
+        # NOTE: nmap_results might be None if using APFA data directly
+        # We pass nmap_results even if None - report generator handles it
+        report = self.report_generator.generate_llm_only_report(
+            config=self.config,
+            results=results,
+            nmap_results=nmap_results
+        )
         print("\n🏁 Smart Triage completed.")
         return results
 
@@ -170,9 +175,11 @@ class SmartTriageAgent:
 
     def _generate_report(self, results: List[Dict]):
         """
-        Save results to JSON.
+        DEPRECATED: Use report_generator.generate_llm_only_report() instead.
+        Kept for backward compatibility.
         """
-        report_path = self.results_dir / f"smart_triage_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        logger.warning("_generate_report is deprecated. Use ReportGenerator instead.")
+        report_path = Path("data/agent_results") / f"smart_triage_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
         with open(report_path, 'w') as f:
             json.dump(results, f, indent=2)
         print(f"📄 Report saved to {report_path}")

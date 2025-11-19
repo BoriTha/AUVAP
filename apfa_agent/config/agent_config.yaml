@@ -139,5 +139,5 @@ metasploit:
   auto_start: false
   module_map: config/msf_modules.yaml
   auto_discover: true
-  auto_discover_confidence_threshold: 0.4  # LOWERED - trust MSF more (was 0.6)
+  auto_discover_confidence_threshold: 0.25  # LOWERED - trust MSF more (was 0.4, originally 0.6)
   auto_save_successful: true

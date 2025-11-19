@@ -121,6 +121,10 @@ class PentestingEnv(gym.Env):
                 'reason': 'port_not_available',
                 'port_index': port_index
             }
+            
+            # Update tracking (don't update state_manager since port_index might be out of range)
+            self.total_reward += reward
+            
             done = self._is_done()
             obs = self.state_manager.get_state()
             return obs, reward, done, False, info
@@ -133,29 +137,19 @@ class PentestingEnv(gym.Env):
         actual_method, skill_data = self.tool_manager.get_exploit_method(service_sig)
         
         # Check if agent requested unavailable method
+        # CRITICAL FIX: Instead of failing, fall back to the best available method
+        # This prevents the agent from getting stuck requesting non-existent cached exploits
+        inefficiency_penalty = 0.0
         if method_requested == 'cached_skill' and actual_method not in ['cached_script', 'custom_script']:
-            # Agent wanted cache but none exists
-            reward = -1.0
-            info = {'result': 'invalid_action', 'reason': 'no_cached_skill'}
-            done = self._is_done()
-            obs = self.state_manager.get_state()
-            return obs, reward, done, False, info
-        
-        if method_requested == 'metasploit' and actual_method != 'metasploit' and method_requested != 'llm_generate': 
-             # If we requested metasploit but tool manager says we don't have it (and it's not a fallback to LLM)
-             # Actually tool_manager.get_exploit_method returns the BEST method.
-             # But here we are forcing a method via action.
-             # We need to check if the requested method is AVAILABLE.
-             # The prompt's _is_action_valid logic handles this check before step?
-             # No, step calls _is_action_valid? No, the prompt implementation of step does NOT call _is_action_valid.
-             # But the requirements section showed step calling _is_action_valid.
-             # The implementation section shows step doing checks inline.
-             pass
-
-        # Re-implementing the logic from the prompt's implementation section which seems more complete
+            # Agent wanted cache but none exists - give small penalty but try LLM fallback
+            inefficiency_penalty = -0.5  # Small penalty for inefficient choice
+            print(f"⚠️  No cached skill available, falling back to {actual_method}")
+        elif method_requested == 'metasploit' and actual_method != 'metasploit':
+            # Agent wanted MSF but none exists - give small penalty but try LLM fallback
+            inefficiency_penalty = -0.5  # Small penalty for inefficient choice
+            print(f"⚠️  No MSF module available, falling back to {actual_method}")
         
         # Execute based on actual method (from ToolManager)
-        
         if actual_method in ['cached_script', 'custom_script']:
             reward, info = self._execute_cached(port_index, skill_data)
             self.method_stats['cached_skill'] += 1
@@ -163,29 +157,18 @@ class PentestingEnv(gym.Env):
             reward, info = self._execute_metasploit(port_index, skill_data, vuln)
             self.method_stats['metasploit'] += 1
         else:  # generate_new
-            # If the agent requested cached/msf but we don't have it, we fall back to LLM?
-            # The prompt code had a check:
-            # if method_requested == 'cached_skill' and actual_method != 'cached_script': return error
-            # So if agent requested cached and we don't have it, we fail.
-            # If agent requested LLM, and we have cached, what happens?
-            # The code executes cached (because actual_method is cached).
-            # And reward logic:
-            # "if method_requested == 'cached_skill' and actual_method == 'cached_script': reward += 2.0"
-            # So if agent requested LLM but cached was used, no bonus.
-            
-            # Wait, if actual_method is 'cached_script', we execute cached.
-            # Even if method_requested was 'llm_generate'.
-            # This means the agent can't force LLM generation if a script is cached?
-            # That might be intended to prevent waste.
-            
             reward, info = self._execute_llm_generation(port_index, service_sig, vuln)
             self.method_stats['llm_generate'] += 1
         
-        # Apply efficiency bonus
-        if method_requested == 'cached_skill' and actual_method in ['cached_script', 'custom_script']:
-            reward += 2.0  # Smart choice!
-        elif method_requested == 'metasploit' and actual_method == 'metasploit':
-            reward += 1.0  # Good choice
+        # Apply inefficiency penalty
+        reward += inefficiency_penalty
+        
+        # Apply efficiency bonus (only if no penalty was applied)
+        if inefficiency_penalty == 0.0:
+            if method_requested == 'cached_skill' and actual_method in ['cached_script', 'custom_script']:
+                reward += 2.0  # Smart choice!
+            elif method_requested == 'metasploit' and actual_method == 'metasploit':
+                reward += 1.0  # Good choice
         
         # Update Skill Library if success
         if info['result'] == 'success':

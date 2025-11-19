@@ -105,9 +105,9 @@ class ToolManager:
         self,
         service_signature: str,
         skill_type: str,
-        code: str = None,
-        module: str = None,
-        port: int = None,
+        code: Optional[str] = None,
+        module: Optional[str] = None,
+        port: Optional[int] = None,
         success: bool = True
     ):
         """
@@ -115,6 +115,10 @@ class ToolManager:
         
         Called after successful exploitation to "teach" the agent.
         """
+        # Parameterize code before storing (make it reusable!)
+        if code:
+            code = self._param_code(code)
+        
         if service_signature not in self.skills:
             # New skill
             self.skills[service_signature] = {
@@ -158,6 +162,32 @@ class ToolManager:
         self.skills = {}
         self.save_skills()
         print("🔄 Skill library cleared")
+    
+    def _param_code(self, code: str) -> str:
+        """
+        Convert hardcoded IPs/ports to placeholders for reusability.
+        Uses regex to find common IP patterns and port assignments.
+        """
+        import re
+        
+        # Find IP addresses in quotes and replace with environment variable
+        # Pattern: "xxx.xxx.xxx.xxx" or 'xxx.xxx.xxx.xxx'
+        ip_pattern = r'(["\'])(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\1'
+        
+        # Replace hardcoded IPs with os.getenv call
+        # target_ip = "192.168.1.1" -> target_ip = os.getenv("TARGET_IP", "192.168.1.1")
+        code = re.sub(
+            r'target_ip\s*=\s*(["\'])(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})\1',
+            r'target_ip = os.getenv("TARGET_IP", \g<1>\g<2>\g<1>)',
+            code
+        )
+        
+        # Ensure os module is imported
+        if 'import os' not in code:
+            code = 'import os\n' + code
+        
+        print(f"📋 Parameterized exploit code for portability")
+        return code
     
     def print_stats(self):
         """Print skill library statistics"""

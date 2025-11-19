@@ -22,8 +22,13 @@ TARGET:
 
 TEMPLATE STRUCTURE:
 import socket
-target_ip = "{target_ip}"
-target_port = {target_port}
+import os
+import sys
+
+# IMPORTANT: Read parameters from environment (makes exploit reusable!)
+target_ip = os.getenv('TARGET_IP', '{target_ip}')
+target_port = int(os.getenv('TARGET_PORT', '{target_port}'))
+
 try:
     # Connect
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

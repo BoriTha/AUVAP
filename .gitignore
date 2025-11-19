@@ -49,6 +49,14 @@ htmlcov/
 data/output/*.json
 data/output/*.xml
 
+# Agent Results & Reports
+data/agent_results/*.json
+data/agent_results/*.pkl
+data/agent_results/tensorboard/
+
+# Temporary files
+data/temp/*.json
+
 # Logs
 *.log
 logs/
@@ -56,8 +64,13 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
--e 
+
 # Archived documentation
 .archived_docs/
 
+# Node modules (if any)
+node_modules/
+package-lock.json
+
+# Prompts directory
 prompts/

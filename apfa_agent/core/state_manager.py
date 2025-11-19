@@ -117,14 +117,22 @@ class StateManager:
                     continue
         
         # Debug: Print open ports found in graph
-        print(f"DEBUG: StateManager found open ports in graph: {open_ports}")
+        print(f"DEBUG: StateManager found open ports in graph: {sorted(list(open_ports))}")
         print(f"DEBUG: Tracked ports: {self.tracked_ports}")
         
+        open_count = 0
+        unknown_count = 0
         for i, port in enumerate(self.tracked_ports):
             if port in open_ports:
                 self.state_vector[i] = STATE_OPEN
+                open_count += 1
+                print(f"  DEBUG: Port {port} (index {i}) -> STATE_OPEN")
             else:
                 self.state_vector[i] = STATE_UNKNOWN
+                unknown_count += 1
+                print(f"  WARNING: Port {port} (index {i}) -> STATE_UNKNOWN (not in graph!)")
+        
+        print(f"DEBUG: Marked {open_count} ports as OPEN, {unknown_count} as UNKNOWN in state vector")
 
         # 2. OS Detection [N, N+1]
         # Find host node
@@ -209,6 +217,12 @@ class StateManager:
             # Also allow retrying FAILED ports (maybe with different method)
             if status == STATE_OPEN or status == STATE_FAILED:
                 actions.append(i)
+        
+        # DEBUG: Print available actions
+        if len(actions) == 0:
+            print(f"WARNING: No available actions! State vector: {self.state_vector[:self.num_ports]}")
+            print(f"Tracked ports: {self.tracked_ports}")
+        
         return actions
 
     def get_vuln_for_action(self, action_id: int) -> Optional[Dict[str, Any]]:

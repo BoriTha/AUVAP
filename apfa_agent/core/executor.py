@@ -65,17 +65,27 @@ class CowboyExecutor:
                 result["status"] = "security_violation"
                 return result
 
+            # 1.5. Parameter Injection: Replace common placeholders
+            # This allows cached exploits to work across different targets
+            safe_code = safe_code.replace('{{TARGET_IP}}', target_ip)
+            safe_code = safe_code.replace('{{TARGET_PORT}}', str(port))
+
             # 2. Write to temp file
             with open(filepath, 'w') as f:
                 f.write(safe_code)
             
-            # 3. Execute
+            # 3. Execute with environment variables (additional parameter injection method)
             logger.info(f"Executing exploit for {target_ip}:{port}...")
+            env = os.environ.copy()
+            env['TARGET_IP'] = target_ip
+            env['TARGET_PORT'] = str(port)
+            
             process = subprocess.run(
                 [sys.executable, str(filepath)],
                 capture_output=True,
                 text=True,
-                timeout=timeout
+                timeout=timeout,
+                env=env  # ← Inject parameters via environment!
             )
             
             stdout = process.stdout

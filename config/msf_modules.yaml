@@ -19,6 +19,14 @@ modules:
     reliability: "excellent"
     source: "manual"
   
+  "samba smbd 3.0.20-debian":
+    module: "exploit/multi/samba/usermap_script"
+    cve: "CVE-2007-2447"
+    ports: [139, 445]
+    payload: "cmd/unix/bind_netcat"
+    reliability: "excellent"
+    source: "manual"
+  
   "unrealircd 3.2.8.1":
     module: "exploit/unix/irc/unreal_ircd_3281_backdoor"
     cve: "CVE-2010-2075"
