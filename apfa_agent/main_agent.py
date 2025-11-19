@@ -230,13 +230,16 @@ def llm_only_mode(config: dict, config_path: str, target_ip: str = None, apfa_pa
     print(f"  Successful: {report['exploitation_results']['successful_exploits']}")
     print(f"  Success rate: {report['exploitation_results']['success_rate']:.1%}")
 
-def train_mode(config: dict, config_path: str, timesteps: int = None):
+def train_mode(config: dict, config_path: str, timesteps: int = None, apfa_path: str = None):
     """Training mode: Train PPO agent"""
     print("\n🎓 MODE: TRAINING (Hybrid RL + LLM)")
     
     # Setup
     nmap_results = phase_0_scan(config)
-    apfa_path = phase_1_enrichment(config)
+    if not apfa_path:
+        apfa_path = phase_1_enrichment(config)
+    else:
+        print(f"Using provided APFA data: {apfa_path}")
     
     # Build graph
     mapper = TerrainMapper()
@@ -294,7 +297,7 @@ def train_mode(config: dict, config_path: str, timesteps: int = None):
     # Print skill library stats
     tool_mgr.print_stats()
 
-def hybrid_mode(config: dict, config_path: str, target_ip: str = None):
+def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path: str = None):
     """Hybrid mode: RL + LLM + Skill Library"""
     print("\nMODE: HYBRID (RL + LLM + Skill Library)")
     
@@ -304,7 +307,10 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None):
     
     # Setup (same as training)
     nmap_results = phase_0_scan(config)
-    apfa_path = phase_1_enrichment(config)
+    if not apfa_path:
+        apfa_path = phase_1_enrichment(config)
+    else:
+        print(f"Using provided APFA data: {apfa_path}")
     
     mapper = TerrainMapper()
     graph = mapper.create_from_nmap(nmap_results)
@@ -408,13 +414,16 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None):
     print(f"  Method usage: LLM={env.method_stats.get('llm_generate',0)}, "
           f"Cached={env.method_stats.get('cached_skill',0)}, MSF={env.method_stats.get('metasploit',0)}")
 
-def eval_mode(config: dict, config_path: str, n_episodes: int = 10):
+def eval_mode(config: dict, config_path: str, n_episodes: int = 10, apfa_path: str = None):
     """Evaluation mode"""
     print("\nMODE: EVALUATION")
     
     # Setup (same as hybrid)
     nmap_results = phase_0_scan(config)
-    apfa_path = phase_1_enrichment(config)
+    if not apfa_path:
+        apfa_path = phase_1_enrichment(config)
+    else:
+        print(f"Using provided APFA data: {apfa_path}")
     
     mapper = TerrainMapper()
     graph = mapper.create_from_nmap(nmap_results)
