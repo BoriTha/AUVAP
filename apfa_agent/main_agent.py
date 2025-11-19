@@ -119,8 +119,19 @@ def phase_0_scan(config: dict, force_rescan: bool = False) -> dict:
                 
     print(f"✓ Found {open_ports} open ports")
     
+    # DEBUG: Print nmap results summary
+    print(f"DEBUG: Nmap results keys: {nmap_results.keys()}")
+    if 'hosts' in nmap_results:
+        print(f"DEBUG: Hosts found: {len(nmap_results['hosts'])}")
+        for h in nmap_results['hosts']:
+            print(f"DEBUG: Host {h.get('ip')} has {len(h.get('services', []))} services")
+
     if open_ports == 0:
         print(" Warning: No open ports found. Agent may have nothing to do.")
+        
+        if not force_rescan:
+            print("Cached scan returned no results. Forcing live scan...")
+            return phase_0_scan(config, force_rescan=True)
         
     return nmap_results
 
@@ -243,10 +254,10 @@ def train_mode(config: dict, config_path: str, timesteps: int = None, apfa_path:
     
     # Build graph
     mapper = TerrainMapper()
-    graph = mapper.create_from_nmap(nmap_results)
+    graph = mapper.build_graph(nmap_results)
     
     # Create state manager
-    state_mgr = StateManager(nmap_graph=graph, apfa_json_path=apfa_path)
+    state_mgr = StateManager(graph=graph, apfa_data_path=apfa_path)
     
     # Initialize components
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -258,8 +269,8 @@ def train_mode(config: dict, config_path: str, timesteps: int = None, apfa_path:
         max_failures=config.get('skill_library', {}).get('max_failures', 3)
     )
     
-    llm = UniversalLLMClient()
-    executor = CowboyExecutor(target_ip=config.get('target', {}).get('ip'))
+    llm = UniversalLLMClient(config)
+    executor = CowboyExecutor(config)
     
     # Create environment
     env = PentestingEnv(
@@ -268,7 +279,7 @@ def train_mode(config: dict, config_path: str, timesteps: int = None, apfa_path:
         llm_client=llm,
         executor=executor,
         max_steps=50,
-        skill_persistence=config.get('mode', {}).get('hybrid', {}).get('skill_persistence', 'read_write')
+        skill_persistence=config.get('mode', {}).get('train', {}).get('skill_persistence', 'read_write')
     )
     
     # Create PPO agent
@@ -297,7 +308,7 @@ def train_mode(config: dict, config_path: str, timesteps: int = None, apfa_path:
     # Print skill library stats
     tool_mgr.print_stats()
 
-def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path: str = None):
+def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path: str = None, scoped_ports: list = None):
     """Hybrid mode: RL + LLM + Skill Library"""
     print("\nMODE: HYBRID (RL + LLM + Skill Library)")
     
@@ -313,9 +324,10 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
         print(f"Using provided APFA data: {apfa_path}")
     
     mapper = TerrainMapper()
-    graph = mapper.create_from_nmap(nmap_results)
+    graph = mapper.build_graph(nmap_results)
     
-    state_mgr = StateManager(nmap_graph=graph, apfa_json_path=apfa_path)
+    # Initialize StateManager with scoped ports if provided
+    state_mgr = StateManager(graph=graph, apfa_data_path=apfa_path, tracked_ports=scoped_ports)
     
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     skill_lib_path = os.path.join(project_root, "data/agent_results/skill_library.json")
@@ -326,8 +338,8 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
         max_failures=config.get('skill_library', {}).get('max_failures', 3)
     )
     
-    llm = UniversalLLMClient()
-    executor = CowboyExecutor(target_ip=config.get('target', {}).get('ip'))
+    llm = UniversalLLMClient(config)
+    executor = CowboyExecutor(config)
     
     env = PentestingEnv(
         state_manager=state_mgr,
@@ -340,7 +352,11 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
     
     ppo_agent = PPOAgent(state_mgr, tool_mgr, llm, executor, config_path)
     ppo_agent.set_environment(env)
-    # ppo_agent.initialize_model(force_new=False)
+    
+    # Check if model needs re-initialization due to dimension change
+    if scoped_ports:
+        print("Scoped mode active: Initializing fresh agent model for dynamic scope.")
+        ppo_agent.initialize_model(force_new=True)
     
     # Run episode
     print("\n" + "="*60)
@@ -358,27 +374,19 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
         print(f"\n--- Step {step} ---")
         
         # PPO selects action
-        # We need to load the model first if not trained in this session
         if ppo_agent.model is None:
-             # Try to load, or use random if no model?
-             # PPOAgent should handle loading in __init__ or we need to call load
-             # Assuming PPOAgent loads model in __init__ or has a load method.
-             # Based on file read: self.model = None. self.model_path = ...
-             # It likely needs explicit loading.
              try:
-                 ppo_agent.load()
-             except:
-                 print("Warning: No trained model found, using random actions or untrained agent.")
-                 # If load fails, we might need to initialize a new one
-                 ppo_agent.initialize_model() # Assuming this method exists or similar
+                 ppo_agent.initialize_model() 
+             except Exception as e:
+                 print(f"Warning: Model load failed ({e}), starting fresh.")
+                 ppo_agent.initialize_model(force_new=True)
         
         action, _states = ppo_agent.model.predict(obs, deterministic=True)
         
         # Decode action for display
-        # env._decode_action might be internal, but useful for logging
         try:
             port_index, method = env._decode_action(action)
-            port_str = state_mgr.TRACKED_PORTS[port_index] if port_index is not None and port_index < len(state_mgr.TRACKED_PORTS) else 'N/A'
+            port_str = state_mgr.tracked_ports[port_index] if port_index is not None and port_index < len(state_mgr.tracked_ports) else 'N/A'
             print(f"PPO selected: Port {port_str}, Method: {method}")
         except:
             print(f"PPO selected action: {action}")
@@ -426,9 +434,10 @@ def eval_mode(config: dict, config_path: str, n_episodes: int = 10, apfa_path: s
         print(f"Using provided APFA data: {apfa_path}")
     
     mapper = TerrainMapper()
-    graph = mapper.create_from_nmap(nmap_results)
+    graph = mapper.build_graph(nmap_results)
     
-    state_mgr = StateManager(nmap_graph=graph, apfa_json_path=apfa_path)
+    # Create state manager
+    state_mgr = StateManager(graph=graph, apfa_data_path=apfa_path)
     
     project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     skill_lib_path = os.path.join(project_root, "data/agent_results/skill_library.json")
@@ -439,8 +448,8 @@ def eval_mode(config: dict, config_path: str, n_episodes: int = 10, apfa_path: s
         max_failures=config.get('skill_library', {}).get('max_failures', 3)
     )
     
-    llm = UniversalLLMClient()
-    executor = CowboyExecutor(target_ip=config.get('target', {}).get('ip'))
+    llm = UniversalLLMClient(config)
+    executor = CowboyExecutor(config)
     
     env = PentestingEnv(
         state_manager=state_mgr,
@@ -463,6 +472,56 @@ def generate_report(config, nmap_results, state_mgr, tool_mgr, llm, env) -> dict
     """Generate comprehensive report"""
     stats = state_mgr.get_statistics()
     
+    # Enhanced Reporting for Successful Exploits
+    successful_exploits_details = []
+    compromised_ports = stats.get('compromised_ports', [])
+    
+    # Iterate through known skills to find details for compromised ports
+    for port in compromised_ports:
+        # Find skill for this port
+        # ToolManager stores skills by signature, not port directly, but we can search
+        # Or we use state_mgr mappings.
+        # Actually tool_mgr.skills is dict by signature.
+        # We can check recent skills added.
+        
+        # Better strategy: Check state_mgr.port_to_vuln for vuln details
+        vuln = state_mgr.port_to_vuln.get(port, {})
+        
+        # Try to find the successful skill
+        signature = state_mgr.get_service_signature(state_mgr.tracked_ports.index(port) if port in state_mgr.tracked_ports else -1)
+        skill = tool_mgr.skills.get(signature)
+        
+        exploit_detail = {
+            "port": port,
+            "service": signature,
+            "vulnerability_details": {
+                "name": vuln.get("pn", "Unknown"),
+                "cve": vuln.get("c", "N/A"),
+                "severity": vuln.get("s", "Unknown")
+            },
+            "access_level": "Root/System" if env.root_obtained else "User/Service", # Approximation
+            "replication_steps": "N/A"
+        }
+        
+        if skill:
+            if skill.get('type') == 'metasploit':
+                exploit_detail['replication_steps'] = f"Metasploit Module: {skill.get('module')}\nOptions: RHOSTS=<target>, RPORT={port}"
+            else:
+                 # Custom script
+                 code = skill.get('code', '')
+                 exploit_detail['replication_steps'] = f"Execute Python Script:\n{code[:200]}..." # Truncated for brevity in JSON but full code is available
+                 exploit_detail['full_code'] = code
+
+        successful_exploits_details.append(exploit_detail)
+
+    # Extract open ports for report
+    open_ports_list = []
+    if nmap_results and 'hosts' in nmap_results:
+        for host in nmap_results['hosts']:
+            for service in host.get('services', []):
+                if service.get('state') == 'open':
+                    open_ports_list.append(service)
+
     return {
         'metadata': {
             'mode': 'hybrid',
@@ -471,22 +530,23 @@ def generate_report(config, nmap_results, state_mgr, tool_mgr, llm, env) -> dict
             'agent_model': config.get('agent', {}).get('model_name')
         },
         'scan_results': {
-            'total_ports': len(nmap_results['open_ports']) if nmap_results else 0,
-            'services': nmap_results['open_ports'] if nmap_results else []
+            'total_ports': len(open_ports_list),
+            'services': open_ports_list
         },
         'exploitation_results': {
             'total_attempts': stats.get('total_attempts', 0),
             'successful_exploits': stats.get('successful_exploits', 0),
             'success_rate': stats.get('success_rate', 0.0),
             'average_reward': stats.get('average_reward', 0.0),
-            'root_obtained': env.root_obtained
+            'root_obtained': env.root_obtained,
+            'details': successful_exploits_details
         },
         'skill_library_stats': {
             'total_skills': len(tool_mgr.skills),
             'skills_used': env.method_stats.get('cached_skill', 0),
             'method_distribution': env.method_stats
         },
-        'compromised_services': stats.get('compromised_ports', []),
+        'compromised_services': compromised_ports,
         'attack_history': state_mgr.action_history,
         'llm_stats': llm.stats if hasattr(llm, 'stats') else {}
     }
@@ -507,7 +567,7 @@ def main():
     )
     parser.add_argument(
         '--config',
-        default='config/agent_config.yaml',
+        default='apfa_agent/config/agent_config.yaml',
         help='Path to config file'
     )
     parser.add_argument(
@@ -565,6 +625,12 @@ def main():
     # Print banner
     print_banner()
     
+    # Resolve config path if needed (fixes issue where relative path works for load_config but fails later)
+    if not os.path.exists(args.config):
+        alt_path = os.path.join(os.path.dirname(__file__), args.config)
+        if os.path.exists(alt_path):
+            args.config = alt_path
+    
     # Load config
     print(f"Loading config: {args.config}")
     try:
@@ -573,6 +639,13 @@ def main():
         print(f"Error loading config: {e}")
         # Fallback or exit
         sys.exit(1)
+    
+    # Override target if specified in CLI
+    if args.target:
+        print(f"Overriding target IP: {args.target}")
+        if 'target' not in config:
+            config['target'] = {}
+        config['target']['ip'] = args.target
     
     # Execute mode
     try:

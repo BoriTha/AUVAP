@@ -45,6 +45,9 @@ class TerrainMapper:
                 protocol = svc.get('protocol', 'tcp')
                 state = svc.get('state', 'unknown')
                 
+                # Debug: Print service being added
+                print(f"DEBUG: Adding service node {ip}:{port} ({state})")
+                
                 # Unique ID for service node: IP:PORT
                 service_node_id = f"{ip}:{port}"
                 

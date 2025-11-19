@@ -22,17 +22,27 @@ STATE_FAILED = 3       # Exploit failed
 STATE_COMPROMISED = 4  # Exploit succeeded
 
 class StateManager:
-    def __init__(self, graph: nx.DiGraph, apfa_data_path: Optional[str] = None):
+    def __init__(self, graph: nx.DiGraph, apfa_data_path: Optional[str] = None, tracked_ports: Optional[List[int]] = None):
         """
         Initialize the StateManager.
         
         Args:
             graph: The NetworkX graph from TerrainMapper.
             apfa_data_path: Path to the APFA classified vulnerabilities JSON.
+            tracked_ports: Optional list of specific ports to track (overrides default).
         """
         self.graph = graph
         self.apfa_data = self._load_apfa_data(apfa_data_path)
-        self.state_vector = np.zeros(60, dtype=np.float32)
+        
+        # Dynamic Port Tracking
+        self.tracked_ports = tracked_ports if tracked_ports is not None else TRACKED_PORTS
+        self.num_ports = len(self.tracked_ports)
+        
+        # State Vector Sizing
+        # [Ports (N)] + [OS (2)] + [APFA (2)] + [Reserved (4)]
+        self.metadata_offset = self.num_ports
+        self.state_dim = self.num_ports + 8
+        self.state_vector = np.zeros(self.state_dim, dtype=np.float32)
         
         # Mappings
         self.port_to_vuln = {} # Map port -> vulnerability details
@@ -69,10 +79,7 @@ class StateManager:
         # Reset vector
         self.state_vector.fill(0)
         
-        # 1. Port Status [0-29]
-        # Iterate through tracked ports and check if they are open in the graph
-        # We need to find service nodes in the graph
-        
+        # 1. Port Status [0 to N-1]
         # Create a map of open ports from the graph
         open_ports = set()
         for node, data in self.graph.nodes(data=True):
@@ -83,16 +90,17 @@ class StateManager:
                 except (ValueError, TypeError):
                     continue
         
-        for i, port in enumerate(TRACKED_PORTS):
+        # Debug: Print open ports found in graph
+        print(f"DEBUG: StateManager found open ports in graph: {open_ports}")
+        print(f"DEBUG: Tracked ports: {self.tracked_ports}")
+        
+        for i, port in enumerate(self.tracked_ports):
             if port in open_ports:
                 self.state_vector[i] = STATE_OPEN
             else:
-                self.state_vector[i] = STATE_UNKNOWN # Or should it be closed? 
-                                                     # Requirement says 0=unknown. 
-                                                     # If not in graph, it's effectively unknown or closed.
-                                                     # Keeping as unknown (0) is safe.
+                self.state_vector[i] = STATE_UNKNOWN
 
-        # 2. OS Detection [30-31]
+        # 2. OS Detection [N, N+1]
         # Find host node
         windows_conf = 0.0
         linux_conf = 0.0
@@ -101,28 +109,22 @@ class StateManager:
             if data.get('type') == 'host':
                 os_str = str(data.get('os', '')).lower()
                 if 'windows' in os_str:
-                    windows_conf = 1.0 # Simple binary for now, could be confidence score if Nmap provides
+                    windows_conf = 1.0
                 if 'linux' in os_str:
                     linux_conf = 1.0
-                # If we have multiple hosts, this might be ambiguous, but assuming single target for now
-                # or taking the first host found.
                 break 
         
-        self.state_vector[30] = windows_conf
-        self.state_vector[31] = linux_conf
+        self.state_vector[self.metadata_offset] = windows_conf
+        self.state_vector[self.metadata_offset + 1] = linux_conf
 
-        # 3. APFA Metrics [32-33] (Placeholder, populated in _enrich_with_apfa)
+        # 3. APFA Metrics [N+2, N+3] (Placeholder, populated in _enrich_with_apfa)
         
-        # 4. Reserved [34-59] -> Already 0
+        # 4. Reserved [N+4 to End] -> Already 0
 
     def _enrich_with_apfa(self):
         """Enrich state with APFA vulnerability data."""
         if not self.apfa_data:
             return
-
-        # This assumes apfa_data structure matches what's expected.
-        # Usually it's a list of vulnerabilities or a dict with 'vulnerabilities' key.
-        # Let's assume it's the 'classified_output.json' structure.
         
         vulns = self.apfa_data.get('vulnerabilities', [])
         if not vulns and isinstance(self.apfa_data, list):
@@ -152,13 +154,13 @@ class StateManager:
             if severity in ['high', 'critical']:
                 high_priority_count += 1
 
-        # Update State Vector
+        # Update State Vector (after OS)
         if count > 0:
             avg_cvss = total_cvss / count
-            self.state_vector[32] = avg_cvss / 10.0 # Normalize 0-1
+            self.state_vector[self.metadata_offset + 2] = avg_cvss / 10.0 # Normalize 0-1
         
-        # Normalize high priority count (arbitrary cap at 10 for normalization)
-        self.state_vector[33] = min(high_priority_count / 10.0, 1.0)
+        # Normalize high priority count
+        self.state_vector[self.metadata_offset + 3] = min(high_priority_count / 10.0, 1.0)
 
     def get_state(self) -> np.ndarray:
         """Return a copy of the current state vector."""
@@ -170,24 +172,23 @@ class StateManager:
 
     def get_available_actions(self) -> List[int]:
         """
-        Return list of valid action indices (indices into TRACKED_PORTS).
+        Return list of valid action indices (indices into tracked_ports).
         An action is valid if the port is OPEN or TRIED (retry?).
         Usually we want to attack OPEN ports.
         """
         actions = []
-        for i, port in enumerate(TRACKED_PORTS):
+        for i, port in enumerate(self.tracked_ports):
             status = self.state_vector[i]
             # Allow attacking OPEN ports. 
-            # Maybe allow retrying FAILED? For now, just OPEN.
-            # Also, if we have APFA data, we might prioritize those, but RL should learn that.
-            if status == STATE_OPEN:
+            # Also allow retrying FAILED ports (maybe with different method)
+            if status == STATE_OPEN or status == STATE_FAILED:
                 actions.append(i)
         return actions
 
     def get_vuln_for_action(self, action_id: int) -> Optional[Dict[str, Any]]:
         """Get vulnerability details for a specific action (port index)."""
-        if 0 <= action_id < len(TRACKED_PORTS):
-            port = TRACKED_PORTS[action_id]
+        if 0 <= action_id < len(self.tracked_ports):
+            port = self.tracked_ports[action_id]
             return self.port_to_vuln.get(port)
         return None
 
@@ -200,7 +201,7 @@ class StateManager:
             result: 'success' or 'failure'.
             reward: The reward received.
         """
-        if not (0 <= action_id < len(TRACKED_PORTS)):
+        if not (0 <= action_id < len(self.tracked_ports)):
             logger.error(f"Invalid action_id: {action_id}")
             return
 
@@ -214,29 +215,25 @@ class StateManager:
             self.state_vector[action_id] = STATE_COMPROMISED
             self.stats['successes'] += 1
         else:
-            self.state_vector[action_id] = STATE_FAILED # Or STATE_TRIED if we want to distinguish
+            self.state_vector[action_id] = STATE_FAILED
             self.stats['failures'] += 1
 
         # Update Graph (Optional but good for consistency)
-        # We need to find the node for this port
-        port = TRACKED_PORTS[action_id]
-        # This is tricky because we need the IP. Assuming single host or finding the node.
-        # We'll search for the service node with this port.
+        port = self.tracked_ports[action_id]
         for node, data in self.graph.nodes(data=True):
             if data.get('type') == 'service' and int(data.get('port', -1)) == port:
                 if result == 'success':
                     self.graph.nodes[node]['state'] = 'compromised'
-                # else: maybe mark as 'tried'
 
     def get_service_signature(self, action_id: int) -> str:
         """
         Get the service signature (product + version) for the target port.
         Used by ToolManager to find exploits.
         """
-        if not (0 <= action_id < len(TRACKED_PORTS)):
+        if not (0 <= action_id < len(self.tracked_ports)):
             return "unknown"
 
-        port = TRACKED_PORTS[action_id]
+        port = self.tracked_ports[action_id]
         
         # Find the service node in the graph
         for node, data in self.graph.nodes(data=True):
@@ -264,23 +261,25 @@ class StateManager:
 
     def get_statistics(self) -> Dict[str, Any]:
         """Return exploitation statistics."""
+        # Add compromised ports list to stats
+        self.stats['compromised_ports'] = self.get_compromised_ports()
         return self.stats.copy()
 
     def get_compromised_ports(self) -> List[int]:
         """Return list of successfully exploited ports."""
         compromised = []
-        for i, status in enumerate(self.state_vector[:30]):
+        for i, status in enumerate(self.state_vector[:self.num_ports]):
             if status == STATE_COMPROMISED:
-                compromised.append(TRACKED_PORTS[i])
+                compromised.append(self.tracked_ports[i])
         return compromised
 
     def print_state(self):
         """Print a human-readable summary of the state."""
         print("\n=== State Vector Summary ===")
-        print(f"Open Ports: {[TRACKED_PORTS[i] for i, s in enumerate(self.state_vector[:30]) if s == STATE_OPEN]}")
-        print(f"Compromised: {[TRACKED_PORTS[i] for i, s in enumerate(self.state_vector[:30]) if s == STATE_COMPROMISED]}")
-        print(f"Failed: {[TRACKED_PORTS[i] for i, s in enumerate(self.state_vector[:30]) if s == STATE_FAILED]}")
-        print(f"OS Confidence: Win={self.state_vector[30]:.2f}, Linux={self.state_vector[31]:.2f}")
-        print(f"Avg CVSS: {self.state_vector[32]*10:.2f}")
-        print(f"High Priority Vulns (norm): {self.state_vector[33]:.2f}")
+        print(f"Open Ports: {[self.tracked_ports[i] for i, s in enumerate(self.state_vector[:self.num_ports]) if s == STATE_OPEN]}")
+        print(f"Compromised: {[self.tracked_ports[i] for i, s in enumerate(self.state_vector[:self.num_ports]) if s == STATE_COMPROMISED]}")
+        print(f"Failed: {[self.tracked_ports[i] for i, s in enumerate(self.state_vector[:self.num_ports]) if s == STATE_FAILED]}")
+        print(f"OS Confidence: Win={self.state_vector[self.metadata_offset]:.2f}, Linux={self.state_vector[self.metadata_offset+1]:.2f}")
+        print(f"Avg CVSS: {self.state_vector[self.metadata_offset+2]*10:.2f}")
+        print(f"High Priority Vulns (norm): {self.state_vector[self.metadata_offset+3]:.2f}")
         print("============================")

@@ -1,169 +1,143 @@
 target:
-  ip: "192.168.79.128"
-  description: "Metasploitable 2"
-
+  ip: '0'
+  description: Metasploitable 2
 scanning:
-  mode: "auto"  # live | offline | auto
+  mode: auto
   nmap_xml: null
   live_scan:
     enabled: true
-    arguments: "-sV -sC --top-ports 1000 -T4"
-    output_dir: "data/scans"
+    arguments: -sV -sC --top-ports 1000 -T4
+    output_dir: data/scans
     cache_duration: 3600
   sudo: false
-
 enrichment:
   use_nessus: false
   nessus_file: null
   use_apfa_classifier: false
-
 agent:
-  model_name: "ppo_metasploitable"
+  model_name: ppo_metasploitable
   learning_rate: 0.0003
   n_steps: 2048
   batch_size: 64
   n_epochs: 10
+  ent_coef: 0.05
   total_timesteps: 100000
-
 llm:
-  # List of models to try (in priority order)
   models:
-    - name: "dolphin-phi"
-      provider: "ollama"
-      model: "dolphin-phi"
-      endpoint: "http://localhost:11434"
-      temperature: 0.1
-      max_tokens: 8192
-      timeout: 120
-      enabled: true
-
-    - name: "dolphin-llama3"
-      provider: "ollama"
-      model: "dolphin-llama3"
-      endpoint: "http://localhost:11434"
-      temperature: 0.1
-      max_tokens: 8192
-      timeout: 120
-      enabled: true
-
-    - name: "local-llama3"
-      provider: "ollama"
-      model: "llama3"
-      endpoint: "http://localhost:11434"
-      temperature: 0.1
-      max_tokens: 1500
-      timeout: 60
-      enabled: false
-    
-    - name: "local-codellama"
-      provider: "ollama"
-      model: "codellama"
-      endpoint: "http://localhost:11434"
-      temperature: 0.2
-      max_tokens: 2000
-      timeout: 90
-      enabled: false
-
-    - name: "sherlock"
-      provider: "openrouter"
-      model: "openrouter/openrouter/sherlock-think-alpha"
-      api_key_env: "OPENROUTER_API_KEY"
-      temperature: 0.1
-      max_tokens: 1500
-      timeout: 60
-      enabled: true
-
-    - name: "longcat-flash-chat"
-      provider: "openrouter"
-      model: "meituan/longcat-flash-chat:free"
-      api_key_env: "OPENROUTER_API_KEY"
-      temperature: 0.1
-      max_tokens: 1500
-      timeout: 60
-      enabled: true
-    
-    - name: "qwen-free"
-      provider: "openrouter"
-      model: "qwen/qwen-2.5-72b-instruct:free"
-      api_key_env: "OPENROUTER_API_KEY"
-      temperature: 0.1
-      max_tokens: 1500
-      timeout: 60
-      enabled: true
-    
-    - name: "phi-free"
-      provider: "openrouter"
-      model: "microsoft/phi-4:free"
-      api_key_env: "OPENROUTER_API_KEY"
-      temperature: 0.1
-      max_tokens: 1500
-      timeout: 60
-      enabled: true
-    
-    
- 
+  - name: local-codellama  # ENABLED & FIRST - Best for exploit code generation
+    provider: ollama
+    model: codellama
+    endpoint: http://localhost:11434
+    temperature: 0.2
+    max_tokens: 4096  # INCREASED for longer exploits
+    timeout: 120  # INCREASED for complex generation
+    enabled: true
+  - name: dolphin-phi  # FALLBACK - Faster but weaker
+    provider: ollama
+    model: dolphin-phi
+    endpoint: http://localhost:11434
+    temperature: 0.1
+    max_tokens: 8192
+    timeout: 120
+    enabled: true
+  - name: dolphin-llama3
+    provider: ollama
+    model: dolphin-llama3
+    endpoint: http://localhost:11434
+    temperature: 0.1
+    max_tokens: 8192
+    timeout: 120
+    enabled: true
+  - name: local-llama3
+    provider: ollama
+    model: llama3
+    endpoint: http://localhost:11434
+    temperature: 0.1
+    max_tokens: 1500
+    timeout: 60
+    enabled: false
+  - name: sherlock
+    provider: openrouter
+    model: openrouter/openrouter/sherlock-think-alpha
+    api_key_env: OPENROUTER_API_KEY
+    temperature: 0.1
+    max_tokens: 1500
+    timeout: 60
+    enabled: true
+  - name: longcat-flash-chat
+    provider: openrouter
+    model: meituan/longcat-flash-chat:free
+    api_key_env: OPENROUTER_API_KEY
+    temperature: 0.1
+    max_tokens: 1500
+    timeout: 60
+    enabled: true
+  - name: qwen-free
+    provider: openrouter
+    model: qwen/qwen-2.5-72b-instruct:free
+    api_key_env: OPENROUTER_API_KEY
+    temperature: 0.1
+    max_tokens: 1500
+    timeout: 60
+    enabled: true
+  - name: phi-free
+    provider: openrouter
+    model: microsoft/phi-4:free
+    api_key_env: OPENROUTER_API_KEY
+    temperature: 0.1
+    max_tokens: 1500
+    timeout: 60
+    enabled: true
   retry:
     max_failures_per_model: 3
     rotate_on_failure: true
     retry_with_error_feedback: true
     max_retries: 2
-
 execution:
-  mode: "cowboy"
+  mode: cowboy
   timeout: 60
   max_retries: 2
-
 safety:
   require_vm: true
-  allowed_targets: ["192.168.79.128"]
+  allowed_targets:
+  - 192.168.79.128
   forbidden_commands:
-    - "rm -rf"
-    - "format"
-    - "del /f"
-    - "dd if="
-    - "mkfs"
-    - "> /dev/sda"
-
-# Operating mode
+  - rm -rf
+  - format
+  - del /f
+  - dd if=
+  - mkfs
+  - '> /dev/sda'
 mode:
-  type: "hybrid"  # Options: "llm_only" | "hybrid" | "rl_only"
+  type: hybrid
   llm_only:
-    ranking_strategy: "easy_first"  # Options: "easy_first" | "critical_first" | "custom"
+    ranking_strategy: easy_first
     use_rag: true
   hybrid:
     use_skill_library: true
     use_metasploit: true
-    skill_persistence: "persist_with_decay"  # Options: "reset_always" | "persist_forever" | "persist_with_decay"
-
-# Skill Library settings
+    skill_persistence: persist_with_decay
 skill_library:
   enabled: true
-  path: "data/agent_results/skill_library.json"
-  max_failures: 3  # Remove skill after this many consecutive failures
+  path: data/agent_results/skill_library.json
+  max_failures: 3
   auto_save: true
-  prioritize_cached: true  # RL gets higher reward for using cached exploits
-
-# RAG settings
+  prioritize_cached: true
 rag:
   enabled: true
-  embedding_model: "all-MiniLM-L6-v2"  # Lightweight sentence-transformers
-  vector_db_path: "data/agent_results/rag_exploits.pkl"
-  top_k: 3  # Number of examples to inject into LLM prompt
-  similarity_threshold: 0.7
-
-# Metasploit integration
+  embedding_model: all-MiniLM-L6-v2
+  vector_db_path: data/agent_results/rag_exploits.pkl
+  top_k: 5  # INCREASED - show more examples to weak models
+  similarity_threshold: 0.5  # LOWERED - retrieve more loosely related exploits
 metasploit:
   enabled: true
-  rpc_host: "127.0.0.1"
+  rpc_host: 127.0.0.1
   rpc_port: 55553
   rpc_ssl: false
-  username: "msf"
-  password: "msf123"
-  auto_start: false  # Start msfconsole RPC automatically
-  module_map: "config/msf_modules.yaml"  # CVE -> MSF module mapping
-  
-  # Auto-discovery settings (REAL-WORLD READY)
-  auto_discover: true  # Search MSF database for unknown services
-  auto_discover_confidence_threshold: 0.6  # Minimum confidence to use auto-discovered module
-  auto_save_successful: true  # Save successful auto-discoveries to YAML
-
+  username: msf
+  password: msf123
+  auto_start: false
+  module_map: config/msf_modules.yaml
+  auto_discover: true
+  auto_discover_confidence_threshold: 0.4  # LOWERED - trust MSF more (was 0.6)
+  auto_save_successful: true

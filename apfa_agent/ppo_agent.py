@@ -34,6 +34,22 @@ class PPOAgent:
                 return yaml.safe_load(f)
         return {}
 
+    def set_environment(self, env):
+        """Set the environment for the agent"""
+        self.env = env
+        # If model exists, we might need to re-attach env?
+        if self.model:
+            self.model.set_env(env)
+
+    def load(self):
+        """Load the model from disk"""
+        if self.model_path.with_suffix('.zip').exists():
+            self.model = PPO.load(self.model_path, env=self.env, device='cpu')
+            print(f"Model loaded from {self.model_path}")
+        else:
+            print("No saved model found, initializing new one")
+            self.initialize_model()
+
     def initialize_model(self, force_new: bool = False):
         """Initialize PPO with expanded action space"""
         # Check if model file exists (with .zip extension which SB3 adds)
@@ -41,7 +57,7 @@ class PPOAgent:
         
         if not force_new and model_file.exists():
             print(f"Loading existing model from {model_file}")
-            self.model = PPO.load(model_file, env=self.env)
+            self.model = PPO.load(model_file, env=self.env, device='cpu')
         else:
             print("Initializing new PPO model")
             self.model = PPO(
@@ -52,8 +68,10 @@ class PPOAgent:
                 batch_size=self.config.get('batch_size', 64),
                 n_epochs=self.config.get('n_epochs', 10),
                 gamma=self.config.get('gamma', 0.99),
+                ent_coef=self.config.get('ent_coef', 0.01), # Added entropy coefficient
                 verbose=1,
-                tensorboard_log=self.config.get('tensorboard_log', "data/agent_results/tensorboard/")
+                tensorboard_log=self.config.get('tensorboard_log', "data/agent_results/tensorboard/"),
+                device='cpu'
             )
 
     def train(self, total_timesteps: int = 10000):

@@ -1,5 +1,7 @@
 from pymetasploit3.msfrpc import MsfRpcClient
 import yaml
+import time
+import subprocess
 from pathlib import Path
 from typing import Dict, Optional, List
 from datetime import datetime
@@ -31,23 +33,27 @@ class MetasploitWrapper:
         
         # Connect to MSF RPC
         try:
-            self.client = MsfRpcClient(
-                msf_config['password'],
-                server=msf_config['rpc_host'],
-                port=msf_config['rpc_port'],
-                ssl=msf_config['rpc_ssl']
-            )
+            self._connect(msf_config)
             print("✓ Connected to Metasploit RPC")
         except Exception as e:
             print(f"⚠️  Could not connect to Metasploit RPC: {e}")
-            self.client = None
+            print("Attempting to start Metasploit RPC server...")
+            if self._start_rpc_server(msf_config):
+                 try:
+                     self._connect(msf_config)
+                     print("✓ Connected to Metasploit RPC (started automatically)")
+                 except Exception as e2:
+                     print(f"❌ Failed to connect after starting RPC server: {e2}")
+                     self.client = None
+            else:
+                 self.client = None
         
         # Load module mappings
         self.mapping_path = Path(msf_config['module_map'])
         with open(self.mapping_path) as f:
             data = yaml.safe_load(f)
-            self.module_map = {k.lower(): v for k, v in data.get('modules', {}).items()}
-            self.auto_discovered = {k.lower(): v for k, v in data.get('auto_discovered', {}).items()}
+            self.module_map = {k.lower(): v for k, v in (data.get('modules') or {}).items()}
+            self.auto_discovered = {k.lower(): v for k, v in (data.get('auto_discovered') or {}).items()}
         
         # Auto-discovery settings
         self.auto_discover_enabled = msf_config.get('auto_discover', True)
@@ -291,3 +297,42 @@ class MetasploitWrapper:
         except Exception as e:
             print(f"❌ MSF execution failed: {e}")
             return {'success': False, 'error': str(e)}
+    
+    def _connect(self, msf_config):
+        """Helper to establish connection"""
+        self.client = MsfRpcClient(
+            msf_config['password'],
+            server=msf_config['rpc_host'],
+            port=msf_config['rpc_port'],
+            ssl=msf_config['rpc_ssl']
+        )
+
+    def _start_rpc_server(self, msf_config) -> bool:
+        """Attempt to start msfrpcd"""
+        try:
+            cmd = [
+                "msfrpcd",
+                "-U", msf_config['username'],
+                "-P", msf_config['password'],
+                "-p", str(msf_config['rpc_port']),
+                "-S", # Disable SSL for local if configured that way, but config has ssl option. 
+                      # The config has 'rpc_ssl', if false we should probably use -S.
+                "-a", msf_config['rpc_host']
+            ]
+            
+            # Adjust SSL flag based on config
+            if msf_config.get('rpc_ssl', False):
+                # Remove -S if it was added, or just don't add it. 
+                # msfrpcd defaults to SSL enabled. -S disables it.
+                cmd.remove("-S")
+            
+            print(f"[*] Starting Metasploit RPC: {' '.join(cmd)}")
+            subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            
+            # Wait for it to initialize
+            print("[*] Waiting 15s for Metasploit to initialize...")
+            time.sleep(15)
+            return True
+        except Exception as e:
+            print(f"❌ Failed to start msfrpcd: {e}")
+            return False

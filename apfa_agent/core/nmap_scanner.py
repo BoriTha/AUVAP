@@ -97,6 +97,10 @@ class NmapScanner:
             # We'll assume the environment is set up correctly or we are running as root if needed.
             pass
 
+        print(f"[*] Starting Nmap scan on {target}...")
+        print(f"[*] Arguments: {args}")
+        print("[*] This may take a few minutes depending on network speed and target responsiveness.")
+        
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_filename = f"nmap_{target}_{timestamp}.xml"
         output_path = os.path.join(self.output_dir, output_filename)
@@ -109,8 +113,19 @@ class NmapScanner:
         
         try:
             # We use self.nm.scan() which returns a dict
-            self.nm.scan(hosts=target, arguments=full_args, sudo=self.sudo)
+            # FIX: python-nmap scan() returns a dict, but we want to ensure we get the XML.
+            # Some versions of python-nmap might not populate get_nmap_last_output() if scan() fails or returns early.
+            # Also, if we want to force XML output, we can try passing -oX if the library allows, 
+            # but the comment says it forbids it.
+            # Let's trust the library but add debug.
+            scan_result = self.nm.scan(hosts=target, arguments=full_args, sudo=self.sudo)
             
+            # Debug: Check if scan result has hosts
+            if not scan_result.get('scan'):
+                print(f"WARNING: Nmap scan returned no results for {target}. Check connectivity or permissions.")
+            else:
+                print(f"DEBUG: Nmap scan finished. Found {len(scan_result.get('scan', {}))} hosts.")
+
             # Retrieve XML output and save to file manually
             xml_content = self.nm.get_nmap_last_output()
             if xml_content:

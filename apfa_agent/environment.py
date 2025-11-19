@@ -37,18 +37,22 @@ class PentestingEnv(gym.Env):
         self.max_steps = max_steps
         self.skill_persistence = skill_persistence
         
+        # Dynamic Dimensions
+        self.num_ports = getattr(self.state_manager, 'num_ports', 30)
+        self.obs_dim = getattr(self.state_manager, 'state_dim', 60)
+        
         # Gym spaces
-        # Observation: 60 floats (state vector)
+        # Observation: Dynamic size
         self.observation_space = spaces.Box(
-            low=0, high=4, shape=(60,), dtype=np.float32
+            low=0, high=4, shape=(self.obs_dim,), dtype=np.float32
         )
-        # Action: 92 discrete actions
-        # 0-29: LLM Generate
-        # 30-59: Cached Skill
-        # 60-89: Metasploit
-        # 90: Scan
-        # 91: Privesc
-        self.action_space = spaces.Discrete(92)
+        # Action: 3 methods per port + 2 special actions
+        # 0 to N-1: LLM
+        # N to 2N-1: Cached
+        # 2N to 3N-1: MSF
+        # 3N: Scan
+        # 3N+1: Privesc
+        self.action_space = spaces.Discrete(self.num_ports * 3 + 2)
         
         # Episode tracking
         self.current_step = 0
@@ -95,6 +99,10 @@ class PentestingEnv(gym.Env):
         """Execute one step with expanded action space"""
         self.current_step += 1
         
+        # Debug: Print action and available actions
+        available_actions = self.state_manager.get_available_actions()
+        print(f"Step {self.current_step}: Act={action} Ports={len(available_actions)}")
+        
         # Decode action
         port_index, method_requested = self._decode_action(action)
         
@@ -125,7 +133,7 @@ class PentestingEnv(gym.Env):
         actual_method, skill_data = self.tool_manager.get_exploit_method(service_sig)
         
         # Check if agent requested unavailable method
-        if method_requested == 'cached_skill' and actual_method != 'cached_script':
+        if method_requested == 'cached_skill' and actual_method not in ['cached_script', 'custom_script']:
             # Agent wanted cache but none exists
             reward = -1.0
             info = {'result': 'invalid_action', 'reason': 'no_cached_skill'}
@@ -146,42 +154,9 @@ class PentestingEnv(gym.Env):
 
         # Re-implementing the logic from the prompt's implementation section which seems more complete
         
-        # Execute based on actual method determined by ToolManager? 
-        # Wait, the prompt says: "Use ToolManager to determine execution method"
-        # But the agent CHOSE the method via `action`.
-        # If the agent chose 'cached_skill', we MUST use 'cached_skill'.
-        # If the agent chose 'llm_generate', we MUST use 'llm_generate'.
-        # The prompt implementation says:
-        # "Check if agent requested unavailable method"
-        # "if method_requested == 'cached_skill' and actual_method != 'cached_script': ... return error"
-        # This implies `actual_method` from `tool_manager.get_exploit_method` tells us if a cached script is available.
-        
-        # However, if the agent requests 'llm_generate', we should probably do it even if a cached script exists (though it's inefficient).
-        # The prompt implementation:
-        # "Execute based on actual method" -> This looks like it ignores `method_requested` for execution?
-        # "if actual_method == 'cached_script': ... elif actual_method == 'metasploit': ... else: ... generate_new"
-        # This seems to override the agent's choice if ToolManager thinks otherwise?
-        # Ah, looking closely at the prompt's `step` implementation:
-        # It uses `actual_method` to decide what to execute.
-        # But it penalizes if `method_requested` was 'cached_skill' and `actual_method` wasn't.
-        # This implies the agent is trying to guess what's available?
-        # Or maybe the agent is supposed to learn to pick the right method.
-        
-        # Let's stick to the prompt's implementation logic.
-        
         # Execute based on actual method (from ToolManager)
-        # Wait, if the agent chose 'llm_generate' (action < 30), but `actual_method` is 'cached_script',
-        # the code in the prompt executes 'cached_script'.
-        # "if actual_method == 'cached_script': ... elif actual_method == 'metasploit': ... else: ... generate_new"
-        # This means the agent's choice of method is only used for:
-        # 1. Validation (can I use cached?)
-        # 2. Reward shaping (did I choose efficiently?)
-        # But the EXECUTION is driven by ToolManager's best available method?
-        # That seems slightly contradictory to "Agent learns WHICH EXPLOITATION METHOD to use".
-        # If the execution is always the "best" one found by ToolManager, the agent's choice doesn't change the outcome, only the reward.
-        # That's fine, it's a valid RL setup (auxiliary task / proper credit assignment).
         
-        if actual_method == 'cached_script':
+        if actual_method in ['cached_script', 'custom_script']:
             reward, info = self._execute_cached(port_index, skill_data)
             self.method_stats['cached_skill'] += 1
         elif actual_method == 'metasploit':
@@ -207,7 +182,7 @@ class PentestingEnv(gym.Env):
             self.method_stats['llm_generate'] += 1
         
         # Apply efficiency bonus
-        if method_requested == 'cached_skill' and actual_method == 'cached_script':
+        if method_requested == 'cached_skill' and actual_method in ['cached_script', 'custom_script']:
             reward += 2.0  # Smart choice!
         elif method_requested == 'metasploit' and actual_method == 'metasploit':
             reward += 1.0  # Good choice
@@ -222,7 +197,7 @@ class PentestingEnv(gym.Env):
                     service_signature=service_sig,
                     skill_type='custom_script',
                     code=info.get('exploit_code'),
-                    port=self.state_manager.TRACKED_PORTS[port_index],
+                    port=self.state_manager.tracked_ports[port_index],
                     success=True
                 )
             elif actual_method == 'metasploit':
@@ -231,15 +206,15 @@ class PentestingEnv(gym.Env):
                     service_signature=service_sig,
                     skill_type='metasploit',
                     module=skill_data.get('module'),
-                    port=self.state_manager.TRACKED_PORTS[port_index],
+                    port=self.state_manager.tracked_ports[port_index],
                     success=True
                 )
-            elif actual_method == 'llm_generate': # If we just generated it
+            elif actual_method == 'generate_new': # If we just generated it
                  self.tool_manager.add_skill(
                     service_signature=service_sig,
                     skill_type='custom_script',
                     code=info.get('exploit_code'),
-                    port=self.state_manager.TRACKED_PORTS[port_index],
+                    port=self.state_manager.tracked_ports[port_index],
                     success=True
                 )
 
@@ -275,13 +250,15 @@ class PentestingEnv(gym.Env):
     
     def _decode_action(self, action: int) -> Tuple[Optional[int], str]:
         """Decode action into (port_index, method)"""
-        if action < 30:
+        n = self.num_ports
+        
+        if action < n:
             return (action, 'llm_generate')
-        elif action < 60:
-            return (action - 30, 'cached_skill')
-        elif action < 90:
-            return (action - 60, 'metasploit')
-        elif action == 90:
+        elif action < n * 2:
+            return (action - n, 'cached_skill')
+        elif action < n * 3:
+            return (action - n * 2, 'metasploit')
+        elif action == n * 3:
             return (None, 'scan')
         else:
             return (None, 'privesc')
@@ -322,7 +299,8 @@ class PentestingEnv(gym.Env):
     def _handle_scan_action(self):
         # Placeholder for scan action
         # In a real scenario, this would trigger NmapScanner to scan more ports or deeper
-        reward = -0.5 # Cost of scanning
+        # PENALTY INCREASED: To prevent agent from looping on this placeholder action
+        reward = -5.0 
         info = {'result': 'scanned', 'method': 'scan'}
         done = self._is_done()
         obs = self.state_manager.get_state()
@@ -338,11 +316,18 @@ class PentestingEnv(gym.Env):
 
     def _execute_cached(self, port_index: int, skill_data: Dict) -> Tuple[float, Dict]:
         """Execute cached exploit"""
-        print(f"⚡ Executing cached exploit for port {self.state_manager.TRACKED_PORTS[port_index]}")
+        print(f"⚡ Executing cached exploit for port {self.state_manager.tracked_ports[port_index]}")
         
         code = skill_data.get('code')
-        target_ip = self.state_manager.target_ip
-        port = self.state_manager.TRACKED_PORTS[port_index]
+        # target_ip = self.state_manager.target_ip # target_ip is not in state_manager
+        # We need to get target IP from somewhere. 
+        # StateManager has graph, graph has hosts.
+        # Or we can pass target_ip to environment.
+        # Let's check how state_manager gets target_ip. It doesn't seem to have it explicitly stored as attribute in __init__.
+        # But it builds graph from nmap data which has IPs.
+        # Let's assume single target for now and find it in graph.
+        target_ip = self._get_target_ip()
+        port = self.state_manager.tracked_ports[port_index]
         
         # Execute
         result = self.executor.execute(code, target_ip, port)
@@ -359,14 +344,14 @@ class PentestingEnv(gym.Env):
     
     def _execute_metasploit(self, port_index: int, skill_data: Dict, vuln: Dict) -> Tuple[float, Dict]:
         """Execute Metasploit module"""
-        print(f"🔫 Executing Metasploit module for port {self.state_manager.TRACKED_PORTS[port_index]}")
+        print(f"🔫 Executing Metasploit module for port {self.state_manager.tracked_ports[port_index]}")
         
         module = skill_data.get('module')
         if not module:
             return -1.0, {'result': 'failed', 'error': 'No module specified'}
             
-        target_ip = self.state_manager.target_ip
-        port = self.state_manager.TRACKED_PORTS[port_index]
+        target_ip = self._get_target_ip()
+        port = self.state_manager.tracked_ports[port_index]
         
         options = {
             'RHOSTS': target_ip,
@@ -393,10 +378,10 @@ class PentestingEnv(gym.Env):
     
     def _execute_llm_generation(self, port_index: int, service_sig: str, vuln: Dict) -> Tuple[float, Dict]:
         """Generate and execute new exploit with LLM"""
-        print(f"🤖 Generating new exploit for port {self.state_manager.TRACKED_PORTS[port_index]}")
+        print(f"🤖 Generating new exploit for port {self.state_manager.tracked_ports[port_index]}")
         
-        target_ip = self.state_manager.target_ip
-        port = self.state_manager.TRACKED_PORTS[port_index]
+        target_ip = self._get_target_ip()
+        port = self.state_manager.tracked_ports[port_index]
         
         # 1. Retrieve RAG context
         # Assuming self.tool_manager has access to rag_manager or we pass it in init
@@ -462,9 +447,17 @@ class PentestingEnv(gym.Env):
             return True
         if self.current_step >= self.max_steps:
             return True
-        if len(self.state_manager.get_available_actions()) == 0:
-            return True
+        # if len(self.state_manager.get_available_actions()) == 0:
+        #     return True
         return False
+
+    def _get_target_ip(self) -> str:
+        """Helper to get target IP from state manager's graph"""
+        # Find the first host node in the graph
+        for node, data in self.state_manager.graph.nodes(data=True):
+            if data.get('type') == 'host':
+                return node # The node ID for host is the IP
+        return "127.0.0.1" # Fallback
     
     def render(self, mode='human'):
         """Print current state"""

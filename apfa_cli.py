@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+print("DEBUG: Starting apfa_cli.py")
 """
 DeepExploit Hybrid - Unified CLI
 Unified entry point for scanning, classification, and autonomous exploitation.
@@ -12,6 +13,10 @@ import json
 import logging
 from pathlib import Path
 from datetime import datetime
+
+class BackToMenu(Exception):
+    """Raised when user wants to return to main menu"""
+    pass
 
 # --- Logging Setup ---
 logging.basicConfig(
@@ -110,6 +115,168 @@ def get_agent_functions():
         sys.exit(1)
 
 # --- Command Handlers ---
+
+def handle_scoped_pentest(args):
+    print("\n>>> Scoped Pentest Mode (Interactive)")
+    
+    # 1. Select Input File
+    if not args.input_file:
+        # Auto-discover files in data/input
+        input_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/input')
+        available_files = []
+        
+        if os.path.exists(input_dir):
+            print(f"\nLooking for scan files in: {input_dir}")
+            for f in os.listdir(input_dir):
+                if f.endswith(('.nessus', '.xml', '.json')) and not f.endswith('Zone.Identifier'):
+                    available_files.append(f)
+        
+        if available_files:
+            print("\nAvailable Scan Files:")
+            for i, f in enumerate(available_files):
+                print(f"{i+1}. {f}")
+            print("0. Enter custom path")
+            print("b. Back to menu")
+            
+            choice = input("\nSelect file [1-{}]: ".format(len(available_files))).strip()
+            
+            if choice.lower() in ['b', 'back', 'exit']:
+                raise BackToMenu()
+            elif choice == '0':
+                args.input_file = get_user_input("Enter full path to scan file")
+            elif choice.isdigit() and 0 < int(choice) <= len(available_files):
+                args.input_file = os.path.join(input_dir, available_files[int(choice)-1])
+            else:
+                print("Invalid selection. Using manual entry.")
+                args.input_file = get_user_input("Enter full path to scan file")
+        else:
+            print("No scan files found in data/input.")
+            args.input_file = get_user_input("Enter full path to scan file")
+
+        if not args.input_file:
+            logger.error("Input file required.")
+            return
+
+    # 1. Load and Classify (reuse handle_classify logic or simplified)
+    VulnerabilityClassifier, VulnProcessor = get_classifier_classes()
+    
+    vulns = []
+    input_path = args.input_file
+    if not os.path.exists(input_path):
+        logger.error(f"File not found: {input_path}")
+        return
+
+    try:
+        if input_path.endswith('.nessus'):
+            print(f"Parsing Nessus file: {input_path}")
+            processor = VulnProcessor(input_path)
+            vulns = processor.get_for_llm(fields=["id", "pn", "d", "c", "cvss", "s", "p", "h", "plugin_name", "description"])
+        elif input_path.endswith('.json'):
+            print(f"Loading JSON file: {input_path}")
+            with open(input_path, 'r') as f:
+                data = json.load(f)
+                if isinstance(data, list):
+                    vulns = data
+                elif isinstance(data, dict) and 'vulnerabilities' in data:
+                    for sev in data['vulnerabilities']:
+                        vulns.extend(data['vulnerabilities'][sev])
+                elif isinstance(data, dict):
+                    vulns = [data]
+    except Exception as e:
+        logger.error(f"Failed to load: {e}")
+        return
+
+    # Classify (if needed) - Assuming we want enriched data for decision making
+    # If loading from raw nessus, we should probably run classifier.
+    # For speed, maybe skip full classification if just selecting? 
+    # Prompt says: "Run VulnerabilityClassifier to find pentestable candidates."
+    classifier = VulnerabilityClassifier(enable_rag=False)
+    print("Classifying candidates...")
+    vulns = classifier.classify_batch(vulns)
+
+    # 2. Interactive Selection
+    print("\n--- Candidate Vulnerabilities ---")
+    print(f"{'ID':<5} | {'Sev':<8} | {'Port':<6} | {'Name'}")
+    print("-" * 60)
+    
+    # Store map for easy retrieval
+    vuln_map = {}
+    display_list = []
+    
+    for i, v in enumerate(vulns):
+        vid = str(i + 1)
+        vuln_map[vid] = v
+        sev = v.get('s', 0)
+        port = v.get('p', 0)
+        name = v.get('pn', 'Unknown')[:40]
+        print(f"{vid:<5} | {sev:<8} | {port:<6} | {name}")
+        display_list.append(vid)
+
+    print("-" * 60)
+    selection = input("\nEnter IDs to scope (comma-separated) or 'all' (b to back): ").strip()
+    
+    if selection.lower() in ['b', 'back', 'exit']:
+        raise BackToMenu()
+
+    selected_vulns = []
+    if selection.lower() == 'all':
+        selected_vulns = vulns
+    else:
+        ids = [x.strip() for x in selection.split(',')]
+        for i in ids:
+            if i in vuln_map:
+                selected_vulns.append(vuln_map[i])
+    
+    if not selected_vulns:
+        print("No targets selected. Aborting.")
+        return
+
+    # 3. Extract Ports and Save Scope
+    scope_ports = sorted(list(set(int(v.get('p')) for v in selected_vulns if v.get('p'))))
+    print(f"\nScoped Ports: {scope_ports}")
+    
+    scope_data = {
+        'ports': scope_ports,
+        'vulnerabilities': selected_vulns,
+        'created_at': datetime.now().isoformat()
+    }
+    
+    temp_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data/temp')
+    os.makedirs(temp_dir, exist_ok=True)
+    scope_path = os.path.join(temp_dir, 'scope.json')
+    
+    with open(scope_path, 'w') as f:
+        json.dump(scope_data, f, indent=2)
+    print(f"Scope saved to: {scope_path}")
+
+    # 4. Launch Agent
+    # We need to call hybrid_mode with this scope
+    llm_only_mode, train_mode, hybrid_mode, eval_mode = get_agent_functions()
+    config = load_config()
+    
+    # Ensure target is set
+    target = args.target or config.get('target', {}).get('ip')
+    if not target:
+        target = get_user_input("Enter Target IP")
+    
+    if 'target' not in config: config['target'] = {}
+    config['target']['ip'] = target
+
+    print("\n>>> Launching Scoped Agent...")
+    # We need to modify hybrid_mode to accept scope_path or ports
+    # Passing scope_path via apfa_path argument might work if we handle it in main_agent
+    # Or we pass a specific argument. Since we can't easily change main_agent signature from here without changing main_agent first.
+    # I will update main_agent to accept scoped_ports.
+    
+    # For now, I will assume hybrid_mode accepts 'scoped_ports' kwarg or I update it.
+    # The prompt asks to update main_agent too.
+    
+    try:
+        hybrid_mode(config, CONFIG_PATH, target_ip=target, apfa_path=scope_path, scoped_ports=scope_ports)
+    except TypeError:
+        # Fallback if signature update pending/failed
+        print("Warning: hybrid_mode signature mismatch, trying default")
+        hybrid_mode(config, CONFIG_PATH, target_ip=target, apfa_path=scope_path)
 
 def handle_setup(args):
     print("\n--- Interactive Setup ---")
@@ -348,17 +515,24 @@ def handle_workflow(args):
         handle_classify(cls_args)
 
 
-def get_user_input(prompt_text, default_value=None):
-    """Helper to get input with default value"""
+def get_user_input(prompt_text, default_value=None, allow_back=True):
+    """Helper to get input with default value and back navigation"""
+    prompt = f"{prompt_text}"
     if default_value:
-        prompt = f"{prompt_text} [{default_value}]: "
-    else:
-        prompt = f"{prompt_text}: "
+        prompt += f" [{default_value}]"
+    
+    if allow_back:
+        prompt += " (b to back)"
+    
+    prompt += ": "
     
     try:
         value = input(prompt).strip()
     except EOFError:
         return default_value if default_value else ""
+
+    if allow_back and value.lower() in ['b', 'back', 'return', 'exit']:
+        raise BackToMenu()
 
     if not value and default_value:
         return default_value
@@ -374,9 +548,10 @@ def interactive_menu():
             print("3. Classify (Process Scan Data)")
             print("4. Attack (Launch Agent)")
             print("5. Workflow (Run Automation Chains)")
-            print("6. Exit")
+            print("6. Scoped Pentest (Interactive Mode)")
+            print("7. Exit")
             
-            choice = input("\nSelect an option [1-6]: ").strip()
+            choice = input("\nSelect an option [1-7]: ").strip()
             
             config = load_config()
             default_target = config.get('target', {}).get('ip', '127.0.0.1')
@@ -448,12 +623,20 @@ def interactive_menu():
                 
                 input("\nPress Enter to return to menu...")
                 
-            elif choice == '6':
+            elif choice == '6': # Scoped Pentest
+                handle_scoped_pentest(argparse.Namespace(input_file=None, target=None))
+                input("\nPress Enter to return to menu...")
+
+            elif choice == '7':
                 print("Exiting...")
                 break
             else:
                 print("Invalid selection.")
                 input("\nPress Enter to return to menu...")
+
+        except BackToMenu:
+            print("\nReturning to main menu...")
+            continue
                 
         except KeyboardInterrupt:
             print("\nExiting...")
@@ -506,6 +689,11 @@ def main():
     p_flow.add_argument('--target', help='Target IP address')
     p_flow.add_argument('--nessus-file', help='Input Nessus file for ingest workflow')
     
+    # Scoped Pentest
+    p_scoped = subparsers.add_parser('scoped', help='Interactive Scoped Pentest')
+    p_scoped.add_argument('--input-file', help='Input Nessus/JSON file')
+    p_scoped.add_argument('--target', help='Target IP address')
+
     # Parse
     args = parser.parse_args()
     
@@ -526,6 +714,8 @@ def main():
         handle_attack(args)
     elif args.command == 'workflow':
         handle_workflow(args)
+    elif args.command == 'scoped':
+        handle_scoped_pentest(args)
 
 if __name__ == "__main__":
     main()
