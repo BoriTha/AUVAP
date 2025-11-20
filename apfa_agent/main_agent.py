@@ -48,7 +48,7 @@ if parent_dir not in sys.path:
 from core.nmap_scanner import NmapScanner
 from core.terrain_mapper import TerrainMapper
 from core.state_manager import StateManager
-from apfa_agent.simple_agent import SimpleHeuristicAgent
+from simple_agent import SimpleHeuristicAgent
 from core.llm_client import UniversalLLMClient
 from core.executor import CowboyExecutor
 from msf_wrapper import MetasploitWrapper
