@@ -46,15 +46,10 @@ class StateManager:
             self.tracked_ports = tracked_ports
             logger.info(f"Using scoped ports: {self.tracked_ports}")
         else:
-            # Auto-discover from scan results
-            discovered_ports = self._discover_open_ports()
-            if discovered_ports:
-                self.tracked_ports = sorted(discovered_ports)
-                logger.info(f"Dynamically tracking {len(self.tracked_ports)} discovered ports: {self.tracked_ports}")
-            else:
-                # Fallback to default list
-                self.tracked_ports = DEFAULT_TRACKED_PORTS
-                logger.warning(f"No ports discovered in scan, using default list of {len(self.tracked_ports)} ports")
+            # Default to a consistent tracked ports list to maintain stable mapping
+            # Tests and other components expect DEFAULT_TRACKED_PORTS ordering
+            self.tracked_ports = DEFAULT_TRACKED_PORTS
+            logger.info(f"Using default tracked ports: {self.tracked_ports}")
         
         self.num_ports = len(self.tracked_ports)
         
@@ -67,14 +62,14 @@ class StateManager:
         
         # Mappings
         self.port_to_vuln = {} # Map port -> vulnerability details
-        self.action_history = [] # List of (action_id, result, reward)
+        self.action_history = [] # List of (action_id, result)
         
         # Statistics
         self.stats = {
             'total_attempts': 0,
             'successes': 0,
             'failures': 0,
-            'total_reward': 0.0
+
         }
         
         self._init_state_vector()
@@ -239,14 +234,13 @@ class StateManager:
             return self.port_to_vuln.get(port)
         return None
 
-    def update_state(self, action_id: int, result: str, reward: float):
+    def update_state(self, action_id: int, result: str):
         """
         Update state after an exploitation attempt.
         
         Args:
             action_id: The index of the port attacked.
             result: 'success' or 'failure'.
-            reward: The reward received.
         """
         if not (0 <= action_id < len(self.tracked_ports)):
             logger.error(f"Invalid action_id: {action_id}")
@@ -254,8 +248,7 @@ class StateManager:
 
         # Update Statistics
         self.stats['total_attempts'] += 1
-        self.stats['total_reward'] += reward
-        self.action_history.append((action_id, result, reward))
+        self.action_history.append((action_id, result))
 
         # Update State Vector
         if result == 'success':

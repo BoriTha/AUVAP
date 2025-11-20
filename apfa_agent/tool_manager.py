@@ -158,7 +158,7 @@ class ToolManager:
         return None
     
     def clear_library(self):
-        """Clear all skills (for training mode with reset_always)"""
+        """Clear all skills (for agent reset scenarios)"""
         self.skills = {}
         self.save_skills()
         print("🔄 Skill library cleared")

@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 
 class SmartTriageAgent:
     """
-    LLM-only mode (Smart Triage).
-    Executes attacks sequentially based on LLM ranking, without RL.
+    Agent mode (Smart Triage).
+    Executes attacks sequentially based on LLM ranking.
     """
     
     def __init__(self, config_path: str = "apfa_agent/config/agent_config.yaml", config: Optional[Dict] = None):
@@ -46,7 +46,7 @@ class SmartTriageAgent:
         """
         Run the Smart Triage process.
         """
-        print("🚀 Starting Smart Triage (LLM-only mode)...")
+        print("🚀 Starting Smart Triage (Agent mode)...")
         
         # 1. Rank Targets
         if classified_json_path:
@@ -93,8 +93,8 @@ class SmartTriageAgent:
             print(f"\n[{i+1}/{len(targets)}] Attacking {target['ip']}:{target['port']} ({target['service']})...")
             
             # 2. Check if we have a cached skill or MSF module
-            # In LLM-only mode, we might still want to use known tools if available
-            # But the prompt emphasizes "Execute attacks sequentially (no RL)" and "Use RAG".
+            # In Agent mode, we might still want to use known tools if available
+            # But the prompt emphasizes "Execute attacks sequentially" and "Use RAG".
             # It doesn't explicitly say "ignore MSF/Cache", but "Use LLMRanker... Execute attacks".
             # I'll assume we try LLM generation primarily, but maybe check MSF first?
             # The prompt says "Execute attacks sequentially... Use RAG to inject similar past exploits".
@@ -118,7 +118,7 @@ class SmartTriageAgent:
         # 3. Generate Report using shared report generator
         # NOTE: nmap_results might be None if using APFA data directly
         # We pass nmap_results even if None - report generator handles it
-        report = self.report_generator.generate_llm_only_report(
+        report = self.report_generator.generate_agent_report(
             config=self.config,
             results=results,
             nmap_results=nmap_results
@@ -175,7 +175,7 @@ class SmartTriageAgent:
 
     def _generate_report(self, results: List[Dict]):
         """
-        DEPRECATED: Use report_generator.generate_llm_only_report() instead.
+        DEPRECATED: Use report_generator.generate_agent_report() instead.
         Kept for backward compatibility.
         """
         logger.warning("_generate_report is deprecated. Use ReportGenerator instead.")

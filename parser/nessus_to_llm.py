@@ -42,7 +42,8 @@ class VulnProcessor:
         }
         self._filter_chain = []
         self._original_data = None
-        
+        self._id_counts = {}
+
         if nessus_file:
             self.parse()
     
@@ -117,7 +118,16 @@ class VulnProcessor:
         # Generate unique ID
         plugin_id = item.get('pluginID', '')
         port = item.get('port', '0')
-        vuln_id = f"vuln_{host}_{port}_{plugin_id}"
+        base_id = f"vuln_{host}_{port}_{plugin_id}"
+        # Ensure uniqueness - if we have seen the same base_id, append a suffix
+        if not hasattr(self, '_id_counts'):
+            self._id_counts = {}
+        count = self._id_counts.get(base_id, 0)
+        if count > 0:
+            vuln_id = f"{base_id}_{count}"
+        else:
+            vuln_id = base_id
+        self._id_counts[base_id] = count + 1
         
         # Extract basic attributes
         severity = int(item.get('severity', '0'))

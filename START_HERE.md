@@ -1,40 +1,41 @@
 # 🚀 START HERE - Simple Guide
 
-**Don't worry about all the files! You only need to know about 3 things:**
+**Don't worry about all the files! You only need to know about 2 things:**
 
 ---
 
-## 📍 The Only 3 Things You Need
+## 📍 The Only 2 Things You Need
 
-### 1️⃣ **Put Your Nessus Scans Here (Optional):**
-```
-data/input/
-```
-Drop your `.nessus` files in this folder if you have them. The agent can also scan for you!
+### 1️⃣ **Run The Agent:**
 
----
-
-### 2️⃣ **Run The Agent:**
-
-**Quick Start (Smart Triage):**
+**Automated Pentesting (LLM-Powered):**
 ```bash
-./run_pentest.sh llm-only 192.168.79.128
-```
-
-**Full Autonomous Mode (RL + Learning):**
-```bash
-./run_pentest.sh hybrid 192.168.79.128
+./run_pentest.sh agent 192.168.79.128
 ```
 
 *(Replace IP with your target)*
 
 ---
 
-### 3️⃣ **Get Your Reports Here:**
+### 2️⃣ **Get Your Reports Here:**
 ```
 data/agent_results/
 ```
 You'll find detailed JSON reports and statistics here.
+
+---
+
+### 📋 Optional: Use Your Own Nessus Scans
+
+If you have existing scans, put them here:
+```
+data/input/your_scan.nessus
+```
+
+Then run:
+```bash
+python scripts/parse_and_classify.py data/input/your_scan.nessus data/output/result.json
+```
 
 ---
 
@@ -46,13 +47,13 @@ Everything else is automatic. You don't need to touch anything else.
 
 ## 🔧 Advanced Usage
 
-For more details on training, evaluation, and configuration, check:
+For more details on configuration and options, check:
 - `README_AGENT.md` - Full agent documentation
-- `HOW_IT_WORKS.md` - Architecture details
+- `WORKFLOW.md` - Architecture details
 
 ### Manual Execution:
 ```bash
-python apfa_agent/main_agent.py --mode hybrid --target <IP>
+python apfa_agent/main_agent_simplified.py --mode agent --target <IP>
 ```
 
 ### Parse Nessus Scans Manually:
@@ -94,7 +95,7 @@ python scripts/parse_and_classify.py \
    pip install -r requirements.txt
    ```
 
-2. **Want to see what your RL agent gets?**
+2. **Want to see what your LLM agent gets?**
    ```bash
    cat data/output/result.json | head -50
    ```
@@ -108,8 +109,8 @@ python scripts/parse_and_classify.py \
    ```
 
 4. **Want to understand how it works?**
-   - Read `HOW_IT_WORKS.md` - Detailed explanation
    - Read `WORKFLOW.md` - Visual workflow diagram
+   - Read `README_AGENT.md` - Agent documentation
 
 ---
 
@@ -124,7 +125,7 @@ Your `result.json` contains vulnerabilities with:
 - ✅ **Expected impact** (RCE, data leak, etc.)
 - ✅ **Next steps** (what to do)
 
-Perfect for your RL agent!
+Perfect for your LLM agent!
 
 ---
 
@@ -142,8 +143,8 @@ python scripts/parse_and_classify.py \
 # 3. Check the results
 cat data/output/my_results.json
 
-# 4. Feed to your RL agent
-python your_rl_agent.py data/output/my_results.json
+# 4. Feed to your LLM agent (or let run_pentest.sh handle it)
+python apfa_agent/main_agent_simplified.py --mode agent --target <IP>
 ```
 
 ---
@@ -153,7 +154,7 @@ python your_rl_agent.py data/output/my_results.json
 | What | Where | What to Do |
 |------|-------|------------|
 | **Input** | `data/input/` | Put `.nessus` files here |
-| **Run** | One command | `python scripts/parse_and_classify.py ...` |
-| **Output** | `data/output/` | Get results here for RL agent |
+| **Run** | One command | `./run_pentest.sh agent <IP>` |
+| **Output** | `data/agent_results/` | Get complete pentest reports |
 
-**That's all you need to know!** 🎉
+**That's all you need to know!**

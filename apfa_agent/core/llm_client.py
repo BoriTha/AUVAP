@@ -223,9 +223,13 @@ class UniversalLLMClient:
             print("    Non-interactive mode detected. Exiting.")
             sys.exit(1)
             
-        while True:
+        # Non-blocking fallback: default to DUMMY for non-interactive environments or EOF
             print("    Do you want to switch to DUMMY mode (simulated exploits)?")
-            choice = input("    [Y]es (dummy mode) / [N]o (stop execution): ").strip().lower()
+            try:
+                choice = input("    [Y]es (dummy mode) / [N]o (stop execution): ").strip().lower()
+            except (EOFError, KeyboardInterrupt):
+                print("    Non-interactive input detected: Switching to DUMMY mode.")
+                return True
             
             if choice in ['y', 'yes', 'dummy', 'd']:
                 print("    -> Switching to DUMMY mode. Exploits will be simulated.")

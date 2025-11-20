@@ -4,41 +4,36 @@
 
 ```
 ┌─────────────────┐
-│  Nessus Scan    │  You run a Nessus vulnerability scan
-│  (.nessus file) │
+│  START HERE     │  One command to rule them all
+│  run_pentest.sh │
 └────────┬────────┘
          │
          ↓
 ┌─────────────────────────────────────────────────────┐
-│  STEP 1: PARSER                                     │
+│  STEP 1: AUTOMATED SCANNING                        │
+│  (core/nmap_scanner.py)                            │
+│                                                     │
+│  LLM Agent performs:                               │
+│  • Network discovery                               │
+│  • Port scanning                                   │
+│  • Service identification                          │
+│  • Vulnerability detection                         │
+└────────┬────────────────────────────────────────────┘
+         │
+         ↓
+┌─────────────────────────────────────────────────────┐
+│  OPTIONAL: NESSUS IMPORT                           │
 │  (parser/nessus_to_llm.py)                         │
 │                                                     │
-│  Reads Nessus XML and extracts:                    │
-│  • Host IP (h)                                     │
-│  • Port (p)                                        │
-│  • Severity (s)                                    │
-│  • CVE ID (c)                                      │
-│  • CVSS Score                                      │
-│  • Description                                     │
-│  • Solution                                        │
+│  If you have existing scans:                       │
+│  • Reads Nessus XML                                │
+│  • Extracts vulnerability data                     │
+│  • Converts to structured JSON                     │
 └────────┬────────────────────────────────────────────┘
          │
          ↓
 ┌─────────────────────────────────────────────────────┐
-│  Parsed JSON                                        │
-│  {                                                  │
-│    "h": "192.168.1.100",                           │
-│    "p": 6667,                                      │
-│    "s": 4,                                         │
-│    "c": "CVE-2010-2075",                           │
-│    "cvss": 10.0,                                   │
-│    "pn": "UnrealIRCd Backdoor"                     │
-│  }                                                  │
-└────────┬────────────────────────────────────────────┘
-         │
-         ↓
-┌─────────────────────────────────────────────────────┐
-│  STEP 2: CLASSIFIER                                 │
+│  STEP 2: INTELLIGENT CLASSIFICATION                 │
 │  (classifier/vulnerability_classifier.py)           │
 │                                                     │
 │  3-Tier Classification:                            │
@@ -58,7 +53,7 @@
          │
          ↓
 ┌─────────────────────────────────────────────────────┐
-│  Enriched JSON (RL-Ready)                          │
+│  Enriched JSON (LLM-Ready)                         │
 │  {                                                  │
 │    "original": { /* raw data */ },                 │
 │    "classification": {                             │
@@ -68,7 +63,7 @@
 │        "techniques": ["T1554"]                     │
 │      },                                            │
 │      "priority_score": 10.0,                       │
-│      "rl_agent_hints": {                           │
+│      "llm_agent_hints": {                          │
 │        "suggested_tools": ["metasploit"],          │
 │        "validation_strategy": "...",               │
 │        "next_steps": ["1...", "2...", "3..."]      │
@@ -79,25 +74,28 @@
          │
          ↓
 ┌─────────────────────────────────────────────────────┐
-│  STEP 3: YOUR RL AGENT                             │
+│  STEP 3: LLM-POWERED EXPLOITATION                   │
+│  (agent_mode.py)                                │
 │                                                     │
-│  For each vulnerability:                           │
-│  1. Read priority_score → Attack highest first    │
-│  2. Read suggested_tools → Load tools             │
-│  3. Read validation_strategy → Plan attack        │
-│  4. Execute next_steps → Run exploit              │
-│  5. Record results → Generate report              │
+│  Smart Triage Agent executes:                      │
+│  1. Priority ranking → Attack highest first       │
+│  2. Tool selection → Load appropriate tools       │
+│  3. Attack planning → LLM generates strategies    │
+│  4. Execution → Run exploits automatically        │
+│  5. Results → Record outcomes & generate reports  │
 └────────┬────────────────────────────────────────────┘
          │
          ↓
 ┌─────────────────────────────────────────────────────┐
 │  RESULTS                                           │
 │                                                     │
-│  ✅ Vulnerability confirmed: CVE-2010-2075         │
-│  ✅ Exploitation successful: RCE achieved          │
-│  ✅ Report generated with replication steps        │
+│  ✅ Vulnerabilities discovered & classified         │
+│  ✅ Exploitation attempts executed                  │
+│  ✅ Success/failure documented                      │
+│  ✅ Detailed reports generated                     │
+│  ✅ Replication steps provided                     │
 │                                                     │
-│  → Pentester can verify manually                  │
+│  → Complete automated pentest report               │
 └─────────────────────────────────────────────────────┘
 ```
 
@@ -105,34 +103,37 @@
 
 ## 🎯 What Each Component Does
 
-### Parser (nessus_to_llm.py)
+### Automated Scanner (nmap_scanner.py)
+**Input:** Target IP address  
+**Does:** Performs network discovery and vulnerability scanning  
+**Output:** Raw scan results
+
+### Parser (nessus_to_llm.py) - Optional
 **Input:** Nessus XML file  
 **Does:** Extracts vulnerability data into clean JSON  
 **Output:** Structured vulnerability list
 
 ### Classifier (vulnerability_classifier.py)
-**Input:** Parsed vulnerability JSON  
+**Input:** Scan results or parsed vulnerability JSON  
 **Does:** Adds intelligence (CWE, MITRE, attack plans)  
-**Output:** RL-ready enriched JSON
+**Output:** LLM-ready enriched JSON
 
-### Your RL Agent
+### LLM Agent (Smart Triage)
 **Input:** Enriched vulnerability JSON  
-**Does:** Executes attacks, validates exploits  
-**Output:** Penetration testing reports
+**Does:** Executes attacks, validates exploits, learns from results  
+**Output:** Complete penetration testing reports
 
 ---
 
 ## 🔍 Example Flow
 
 ```
-Nessus Scan
+./run_pentest.sh agent 192.168.1.100
     ↓
-"Found UnrealIRCd on 192.168.1.100:6667"
-    ↓
-Parser extracts:
-    • CVE-2010-2075
-    • CVSS: 10.0
-    • Severity: Critical
+APFA Agent scans:
+    • Discovers UnrealIRCd on 192.168.1.100:6667
+    • Identifies CVE-2010-2075
+    • CVSS: 10.0, Severity: Critical
     ↓
 Classifier enriches:
     • CWE-912 (Hidden Functionality)
@@ -141,7 +142,7 @@ Classifier enriches:
     • Tools: [metasploit, netcat]
     • Steps: [1. Connect, 2. Send payload, 3. Verify]
     ↓
-RL Agent executes:
+LLM Agent executes:
     1. nc 192.168.1.100 6667
     2. Send: AB;system('whoami');
     3. Receives: root
@@ -149,37 +150,36 @@ RL Agent executes:
 Result:
     ✅ Vulnerability confirmed!
     ✅ Remote code execution as root
-    ✅ Report generated
+    ✅ Detailed report generated in data/agent_results/
 ```
 
 ---
 
 ## 💡 Why This Matters
 
-**Without Classifier:**
-- RL agent gets raw CVE numbers
-- No idea how to test them
-- Random/inefficient attacks
+**Without Intelligence:**
+- LLM agent gets raw vulnerability data
+- No context or attack strategies
+- Inefficient, random testing
 
-**With Classifier:**
-- RL agent gets attack plans
-- Knows exactly what to do
+**With APFA:**
+- LLM agent gets complete attack plans
+- Knows exactly what to do and how
 - Efficient, prioritized testing
-- Actionable results
+- Actionable results with detailed reports
 
 ---
 
 ## 🚀 One Command Does It All
 
 ```bash
-python scripts/parse_and_classify.py \
-    data/input/scan.nessus \
-    data/output/rl_ready.json
+./run_pentest.sh agent 192.168.1.100
 ```
 
 This runs:
-1. Parser (Nessus → JSON)
-2. Classifier (JSON → RL-Ready)
-3. Saves results
+1. Automated scanning (Network discovery)
+2. Classification (Intelligence enrichment)
+3. LLM exploitation (Smart triage)
+4. Report generation (Complete documentation)
 
-Then your RL agent just reads `rl_ready.json` and goes! 🎯
+Everything is automated - just check `data/agent_results/` for your report! 🎯

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 print("DEBUG: Starting apfa_cli.py")
 """
-DeepExploit Hybrid - Unified CLI
+APFA - Unified CLI
 Unified entry point for scanning, classification, and autonomous exploitation.
 """
 
@@ -81,9 +81,8 @@ def banner():
    /   |  / __ \/ ____/ |/ /  / ____/ /   /  _/
   / /| | / /_/ / /_  / /|_/  / /   / /    / /  
  / ___ |/ ____/ __/ / /  /  / /___/ /____/ /   
-/_/  |_/_/   /_/   /_/  /_/ \____/_____/___/   
-                                               
-    DeepExploit Hybrid Unified CLI
+/_/  |_/_/   /_/   /_/  /_/ \____/_____/___/                                                
+    AUVAP - Intelligent Pentesting CLI
     """)
 
 # --- Lazy Imports ---
@@ -108,8 +107,8 @@ def get_classifier_classes():
 
 def get_agent_functions():
     try:
-        from apfa_agent.main_agent import llm_only_mode, train_mode, hybrid_mode, eval_mode
-        return llm_only_mode, train_mode, hybrid_mode, eval_mode
+        from apfa_agent.agent_mode import SmartTriageAgent
+        return SmartTriageAgent
     except ImportError as e:
         logger.error(f"Failed to import Agent: {e}")
         sys.exit(1)
@@ -204,6 +203,7 @@ def apply_vuln_filters(vulns, filters):
     return result
 
 def handle_scoped_pentest(args):
+    from apfa_agent.agent_mode import SmartTriageAgent
     print("\n>>> Scoped Pentest Mode (Interactive)")
     
     # 1. Select Input File
@@ -622,8 +622,8 @@ def handle_scoped_pentest(args):
     print(f"Scope saved to: {scope_path}")
 
     # 4. Launch Agent
-    # We need to call hybrid_mode with this scope
-    llm_only_mode, train_mode, hybrid_mode, eval_mode = get_agent_functions()
+    # We need to call agent mode with this scope
+    SmartTriageAgent = get_agent_functions()
     config = load_config()
     
     # Determine target IP - prioritize: args > extracted from vulns > config > user input
@@ -649,20 +649,15 @@ def handle_scoped_pentest(args):
     config['target']['ip'] = target
 
     print("\n>>> Launching Scoped Agent...")
-    # We need to modify hybrid_mode to accept scope_path or ports
-    # Passing scope_path via apfa_path argument might work if we handle it in main_agent
-    # Or we pass a specific argument. Since we can't easily change main_agent signature from here without changing main_agent first.
-    # I will update main_agent to accept scoped_ports.
-    
-    # For now, I will assume hybrid_mode accepts 'scoped_ports' kwarg or I update it.
-    # The prompt asks to update main_agent too.
-    
+    # Use SmartTriageAgent with scope data
     try:
-        hybrid_mode(config, CONFIG_PATH, target_ip=target, apfa_path=scope_path, scoped_ports=scope_ports)
-    except TypeError:
-        # Fallback if signature update pending/failed
-        print("Warning: hybrid_mode signature mismatch, trying default")
-        hybrid_mode(config, CONFIG_PATH, target_ip=target, apfa_path=scope_path)
+        agent = SmartTriageAgent(config_path=CONFIG_PATH, config=config)
+        agent.run(classified_json_path=scope_path, nmap_results=None)
+    except Exception as e:
+        logger.error(f"Scoped agent failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return
 
 def handle_setup(args):
     print("\n--- Interactive Setup ---")
@@ -863,9 +858,10 @@ def handle_classify(args):
     return output_path
 
 def handle_attack(args):
+    from apfa_agent.agent_mode import SmartTriageAgent
     print("\n>>> Attack Mode")
     
-    llm_only_mode, train_mode, hybrid_mode, eval_mode = get_agent_functions()
+    SmartTriageAgent = get_agent_functions()
     
     config = load_config()
     
@@ -879,25 +875,16 @@ def handle_attack(args):
     config['target']['ip'] = target
     
     if args.dry_run:
-        print(f"[Dry Run] Would launch attack on {target} in mode {args.mode}")
+        print(f"[Dry Run] Would launch LLM-based attack on {target}")
         return
 
     print(f"Target: {target}")
-    print(f"Mode: {args.mode}")
+    print("Mode: Intelligent Smart Triage")
     
     try:
-        if args.mode == 'llm-only':
-            print("Starting LLM-Only Mode (Smart Triage)...")
-            llm_only_mode(config, CONFIG_PATH, target_ip=target, apfa_path=args.input_file)
-        elif args.mode == 'hybrid':
-            print("Starting Hybrid Mode...")
-            hybrid_mode(config, CONFIG_PATH, target_ip=target, apfa_path=args.input_file)
-        elif args.mode == 'train':
-            print("Starting Training Mode...")
-            train_mode(config, CONFIG_PATH, apfa_path=args.input_file)
-        elif args.mode == 'eval':
-            print("Starting Evaluation Mode...")
-            eval_mode(config, CONFIG_PATH, apfa_path=args.input_file)
+        print("Starting Intelligent Smart Triage...")
+        agent = SmartTriageAgent(config_path=CONFIG_PATH, config=config)
+        agent.run(classified_json_path=args.input_file, nmap_results=None)
             
     except KeyboardInterrupt:
         print("\nInterrupted by user.")
@@ -911,22 +898,7 @@ def handle_attack(args):
 def handle_workflow(args):
     print(f"\n>>> Workflow: {args.type.upper()}")
     
-    if args.type == 'full':
-        # Scan -> Attack
-        print("\n[Step 1/2] Scanning Target...")
-        scan_args = argparse.Namespace(target=args.target, dry_run=args.dry_run)
-        handle_scan(scan_args)
-        
-        print("\n[Step 2/2] Attacking...")
-        atk_args = argparse.Namespace(
-            mode='hybrid', # Default to hybrid for full workflow
-            target=args.target,
-            input_file=None,
-            dry_run=args.dry_run
-        )
-        handle_attack(atk_args)
-
-    elif args.type == 'ingest':
+    if args.type == 'ingest':
         # Ingest -> Classify
         if not args.nessus_file:
             logger.error("Error: --nessus-file required for ingest workflow")
@@ -941,6 +913,9 @@ def handle_workflow(args):
             dry_run=args.dry_run
         )
         handle_classify(cls_args)
+    else:
+        logger.error(f"Unsupported workflow type: {args.type}. Only 'ingest' workflow is available.")
+        sys.exit(1)
 
 
 def get_user_input(prompt_text, default_value=None, allow_back=True):
@@ -1011,12 +986,10 @@ def interactive_menu():
                 input("\nPress Enter to return to menu...")
 
             elif choice == '4': # Attack
-                mode = get_user_input("Mode (llm-only/hybrid/train/eval)", "llm-only")
                 target = get_user_input("Target IP", default_target)
                 input_file = get_user_input("Input vulnerabilities JSON (optional)")
                 
                 handle_attack(argparse.Namespace(
-                    mode=mode,
                     target=target,
                     input_file=input_file if input_file else None,
                     dry_run=False
@@ -1024,17 +997,9 @@ def interactive_menu():
                 input("\nPress Enter to return to menu...")
                 
             elif choice == '5': # Workflow
-                wf_type = get_user_input("Workflow Type (full/ingest)", "full")
+                wf_type = get_user_input("Workflow Type (ingest)", "ingest")
                 
-                if wf_type == 'full':
-                    target = get_user_input("Target IP", default_target)
-                    handle_workflow(argparse.Namespace(
-                        type='full',
-                        target=target,
-                        nessus_file=None,
-                        dry_run=False
-                    ))
-                elif wf_type == 'ingest':
+                if wf_type == 'ingest':
                     nessus = get_user_input("Nessus File Path")
                     if not nessus:
                         print("Nessus file required.")
@@ -1047,7 +1012,7 @@ def interactive_menu():
                         dry_run=False
                     ))
                 else:
-                    print("Invalid workflow type.")
+                    print("Invalid workflow type. Only 'ingest' is supported.")
                 
                 input("\nPress Enter to return to menu...")
                 
@@ -1080,7 +1045,7 @@ def main():
         return
 
     parser = argparse.ArgumentParser(
-        description="DeepExploit Hybrid - Unified CLI",
+        description="APFA - Intelligent Pentesting CLI",
         formatter_class=argparse.RawTextHelpFormatter
     )
     
@@ -1106,14 +1071,13 @@ def main():
     p_cls.add_argument('--init-config', action='store_true', help='Generate filter config template')
     
     # Attack
-    p_atk = subparsers.add_parser('attack', help='Launch attack agent')
-    p_atk.add_argument('--mode', choices=['llm-only', 'hybrid', 'train', 'eval'], default='llm-only', help='Operation mode')
+    p_atk = subparsers.add_parser('attack', help='Launch intelligent attack agent')
     p_atk.add_argument('--target', help='Target IP address')
     p_atk.add_argument('--input-file', help='Path to classified vulnerabilities JSON')
     
     # Workflow
     p_flow = subparsers.add_parser('workflow', help='Run predefined workflows')
-    p_flow.add_argument('type', choices=['full', 'ingest'], help='Workflow type')
+    p_flow.add_argument('type', choices=['ingest'], help='Workflow type')
     p_flow.add_argument('--target', help='Target IP address')
     p_flow.add_argument('--nessus-file', help='Input Nessus file for ingest workflow')
     

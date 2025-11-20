@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Test Suite for Vulnerability Classifier
-Tests pattern matching, CVE lookup, classification accuracy, and RL agent hints
+Tests pattern matching, CVE lookup, classification accuracy, and agent hints
 """
 
 import json
@@ -128,7 +128,7 @@ def test_classifier_basic():
     assert "cwe" in result1["classification"], "Missing CWE"
     assert "mitre_attack" in result1["classification"], "Missing MITRE ATT&CK"
     assert "priority_score" in result1["classification"], "Missing priority score"
-    assert "rl_agent_hints" in result1["classification"], "Missing RL agent hints"
+    assert "agent_hints" in result1["classification"], "Missing agent hints"
     
     print(f"✓ Vulnerability classified: {vuln1['pn']}")
     print(f"  CWE: {result1['classification']['cwe']}")
@@ -228,10 +228,10 @@ def test_priority_scoring():
     return True
 
 
-def test_rl_agent_hints():
-    """Test RL agent hints generation"""
+def test_agent_hints():
+    """Test agent hints generation"""
     print("="*60)
-    print("TEST: RL Agent Hints")
+    print("TEST: Agent Hints")
     print("="*60)
     
     classifier = VulnerabilityClassifier(mode="hybrid", enable_rag=False)
@@ -249,7 +249,7 @@ def test_rl_agent_hints():
     }
     
     result = classifier.classify_vulnerability(vuln)
-    hints = result["classification"]["rl_agent_hints"]
+    hints = result["classification"]["agent_hints"]
     
     assert "attack_type" in hints, "Missing attack_type"
     assert "suggested_tools" in hints, "Missing suggested_tools"
@@ -265,7 +265,7 @@ def test_rl_agent_hints():
     print(f"✓ Validation strategy: {hints['validation_strategy'][:60]}...")
     print(f"✓ Next steps: {len(hints['next_steps'])} steps provided")
     
-    print("✅ RL agent hints test PASSED\n")
+    print("✅ Agent hints test PASSED\n")
     return True
 
 
@@ -340,7 +340,7 @@ def test_output_schema():
     classification = result["classification"]
     required_classification = ["cwe", "cwe_names", "mitre_attack", "categorization_source",
                                "confidence", "exploitation_assessment", "priority_score",
-                               "rl_agent_hints"]
+                                "agent_hints"]
     for field in required_classification:
         assert field in classification, f"Missing classification field: {field}"
     
@@ -373,7 +373,7 @@ def run_all_tests():
         test_classifier_basic,
         test_classifier_with_cve,
         test_priority_scoring,
-        test_rl_agent_hints,
+        test_agent_hints,
         test_batch_processing,
         test_output_schema
     ]

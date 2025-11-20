@@ -1,6 +1,6 @@
 ## LangChain RAG-Based Vulnerability Classifier
 
-**Intelligent vulnerability categorization system that enriches parsed vulnerability data with CWE categories, MITRE ATT&CK framework mappings, and RL agent hints for automated penetration testing.**
+**Intelligent vulnerability categorization system that enriches parsed vulnerability data with CWE categories, MITRE ATT&CK framework mappings, and LLM agent hints for automated penetration testing.**
 
 ---
 
@@ -10,8 +10,8 @@ This classifier bridges the gap between vulnerability discovery and AI-driven va
 
 - **Input**: JSON vulnerability data from the Nessus parser
 - **Processing**: Uses hybrid intelligence (pattern matching + CVE lookup + optional RAG) to categorize vulnerabilities
-- **Output**: Enriched JSON with CWE, MITRE ATT&CK, exploitation assessments, and guidance for RL agents
-- **End Goal**: Enable RL agents to simulate pentesting attacks, verify exploitability, and generate replication steps
+- **Output**: Enriched JSON with CWE, MITRE ATT&CK, exploitation assessments, and guidance for LLM agents
+- **End Goal**: Enable LLM agents to simulate pentesting attacks, verify exploitability, and generate replication steps
 
 ---
 
@@ -53,14 +53,14 @@ The classifier uses a **3-tier approach** for optimal speed, accuracy, and cost-
           └──────────┬───────────┘
                      │
           ┌──────────▼──────────┐
-          │  RL Agent Enrichment │
+           │  LLM Agent Enrichment │
           │  - Tools, tactics    │
           │  - Priority scoring  │
           │  - Validation hints  │
           └──────────┬───────────┘
                      │
 ┌────────────────────▼────────────────────────────────────────┐
-│              Output: RL-Ready Classified JSON                │
+│              Output: LLM-Ready Classified JSON                │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -69,7 +69,7 @@ The classifier uses a **3-tier approach** for optimal speed, accuracy, and cost-
 1. **VulnerabilityClassifier** (`vulnerability_classifier.py`)
    - Main classification engine
    - Manages 3-tier classification pipeline
-   - Enriches output for RL agents
+    - Enriches output for LLM agents
 
 2. **KnowledgeBase** (`knowledge_base.py`)
    - Loads pattern rules from `patterns.json`
@@ -126,7 +126,7 @@ result = classifier.classify_vulnerability(vuln)
 print(f"CWE: {result['classification']['cwe']}")
 print(f"ATT&CK Tactics: {result['classification']['mitre_attack']['tactics']}")
 print(f"Priority: {result['classification']['priority_score']}/10")
-print(f"Tools: {result['classification']['rl_agent_hints']['suggested_tools']}")
+print(f"Tools: {result['classification']['llm_agent_hints']['suggested_tools']}")
 ```
 
 ### 3. Classify from File
@@ -148,14 +148,14 @@ print(f"Classified {len(results)} vulnerabilities")
 ### 4. End-to-End Pipeline
 
 ```bash
-# Parse Nessus XML → Classify → Output RL-ready JSON
-python scripts/parse_and_classify.py VA_Input/scan.nessus VA_Output/rl_ready.json
+# Parse Nessus XML → Classify → Output LLM-ready JSON
+python scripts/parse_and_classify.py VA_Input/scan.nessus VA_Output/llm_ready.json
 
 # Filter critical/high only
 python scripts/parse_and_classify.py VA_Input/scan.nessus VA_Output/critical.json --severity 3 4
 
 # Enable RAG mode (requires API key)
-python scripts/parse_and_classify.py VA_Input/scan.nessus VA_Output/rl_ready.json --enable-rag
+python scripts/parse_and_classify.py VA_Input/scan.nessus VA_Output/llm_ready.json --enable-rag
 ```
 
 ---
@@ -201,7 +201,7 @@ python scripts/parse_and_classify.py VA_Input/scan.nessus VA_Output/rl_ready.jso
       "publicly_available_exploit": true
     },
     "priority_score": 8.7,
-    "rl_agent_hints": {
+    "llm_agent_hints": {
       "attack_type": "injection_attack",
       "suggested_tools": ["nmap", "metasploit", "searchsploit"],
       "validation_strategy": "Check version, search for public exploits, attempt exploitation",
@@ -232,8 +232,8 @@ python scripts/parse_and_classify.py VA_Input/scan.nessus VA_Output/rl_ready.jso
 | `categorization_source` | How classification was determined (cve_lookup, pattern_match, rag_retrieval, generic_fallback) |
 | `confidence` | Classification confidence (0.0-1.0) |
 | `exploitation_assessment` | Difficulty, attack vector, auth requirements, exploit availability |
-| `priority_score` | RL agent priority (0-10, higher = more urgent) |
-| `rl_agent_hints` | Guidance for automated exploitation (tools, strategy, expected impact) |
+| `priority_score` | LLM agent priority (0-10, higher = more urgent) |
+| `llm_agent_hints` | Guidance for automated exploitation (tools, strategy, expected impact) |
 
 ---
 
@@ -293,7 +293,7 @@ python tests/test_classifier.py
 # - CVE lookup
 # - Classification correctness
 # - Priority scoring
-# - RL agent hints generation
+# - LLM agent hints generation
 # - Batch processing
 # - Output schema validation
 ```
@@ -342,7 +342,7 @@ This demonstrates:
 - Basic classification
 - Batch processing
 - Single vulnerability classification
-- RL agent integration simulation
+- LLM agent integration simulation
 
 ### Example 2: End-to-End Pipeline
 
@@ -350,14 +350,14 @@ This demonstrates:
 # Parse Nessus scan and classify
 python scripts/parse_and_classify.py \
     VA_Input/ms2_scan.nessus \
-    VA_Output/rl_ready.json \
+    VA_Output/llm_ready.json \
     --severity 3 4 \
     --min-cvss 7.0
 ```
 
 Output includes:
 - All classified vulnerabilities
-- Top 10 prioritized targets for RL agent
+- Top 10 prioritized targets for LLM agent
 - Summary of attack types and required tools
 
 ---
@@ -506,35 +506,29 @@ export PYTHONPATH="${PYTHONPATH}:/path/to/APFA"
 
 ---
 
-## 🤝 Integration with RL Agent
+## 🤝 Integration with LLM Agent
 
-### Using Classified Data in Your RL Agent
+### Using Classified Data in Your LLM Agent
 
 ```python
-import json
-
-# Load RL-ready data
-with open("VA_Output/rl_ready.json", 'r') as f:
+# Load LLM-ready data
+with open("VA_Output/llm_ready.json", 'r') as f:
     data = json.load(f)
 
-# Get prioritized targets
-prioritized = data["rl_agent_summary"]["prioritized_targets"]
+# Access prioritized targets
+prioritized = data["llm_agent_summary"]["prioritized_targets"]
 
-# Simulate attacks in priority order
 for vuln in prioritized:
-    target = vuln["original"]
-    hints = vuln["classification"]["rl_agent_hints"]
+    hints = vuln["classification"]["llm_agent_hints"]
     
-    # Use hints to guide exploitation
-    attack_type = hints["attack_type"]
-    tools = hints["suggested_tools"]
-    validation = hints["validation_strategy"]
+    print(f"Target: {vuln['original']['h']}:{vuln['original']['p']}")
+    print(f"Tools: {hints['suggested_tools']}")
+    print(f"Strategy: {hints['validation_strategy']}")
     
-    # Your RL agent exploitation logic here
-    # exploit_vulnerability(target, attack_type, tools, validation)
+    # Your LLM agent exploitation logic here
 ```
 
-### Key Fields for RL Agents
+### Key Fields for LLM Agents
 
 - `priority_score`: Use for attack ordering
 - `attack_type`: Determine exploitation strategy

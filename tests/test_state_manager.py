@@ -82,14 +82,14 @@ class TestStateManager(unittest.TestCase):
         sm = StateManager(self.graph, self.apfa_path)
         idx_80 = TRACKED_PORTS.index(80)
         
-        sm.update_state(idx_80, 'success', 10.0)
+        sm.update_state(idx_80, 'success')
         
         state = sm.get_state()
         self.assertEqual(state[idx_80], 4) # STATE_COMPROMISED
         
         stats = sm.get_statistics()
         self.assertEqual(stats['successes'], 1)
-        self.assertEqual(stats['total_reward'], 10.0)
+
 
 if __name__ == '__main__':
     unittest.main()

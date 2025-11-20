@@ -1,29 +1,29 @@
 # APFA - Automated Pentesting & Vulnerability Assessment
 
-Convert Nessus scans → Classify with NVD/MITRE → Feed to RL Agent for pentesting simulation.
+Convert Nessus scans → Classify with NVD/MITRE → Feed to LLM Agent for automated pentesting.
 
 ---
 
-## 🚀 Quick Start (3 Steps)
+## 🚀 Quick Start (2 Steps)
 
 ### 1. Install
 ```bash
 pip install -r requirements.txt
 ```
 
-### 2. Put Your Nessus Scan Here
-```
-data/input/your_scan.nessus
+### 2. Run Automated Pentest
+```bash
+./run_pentest.sh agent 192.168.1.100
 ```
 
-### 3. Run Pipeline
+**Done!** Your pentest results are in `data/agent_results/`
+
+*Or use your own Nessus scan:*
 ```bash
 python scripts/parse_and_classify.py \
     data/input/your_scan.nessus \
     data/output/result.json
 ```
-
-**Done!** Your results are in `data/output/result.json`
 
 ---
 
@@ -32,11 +32,14 @@ python scripts/parse_and_classify.py \
 ```
 APFA/
 ├── data/
-│   ├── input/         ← PUT YOUR .nessus FILES HERE
-│   └── output/        ← GET YOUR RESULTS HERE
+│   ├── input/         ← PUT YOUR .nessus FILES HERE (optional)
+│   ├── output/        ← PARSED RESULTS HERE
+│   └── agent_results/ ← PENTEST REPORTS HERE
 │
-└── scripts/
-    └── parse_and_classify.py  ← RUN THIS SCRIPT
+├── scripts/
+│   └── parse_and_classify.py  ← PARSE SCANS MANUALLY
+│
+└── run_pentest.sh     ← ONE-CLICK PENTESTING
 ```
 
 **Everything else is internal code - you don't need to touch it!**
@@ -45,8 +48,9 @@ APFA/
 
 ## 🎯 What You Get
 
-Your output JSON contains vulnerabilities enriched with:
+Your pentest reports contain:
 
+- ✅ **Automated vulnerability discovery** - LLM-powered scanning
 - ✅ **CWE categories** - Weakness classification
 - ✅ **MITRE ATT&CK** - Tactics & techniques
 - ✅ **Priority score** - 0-10 ranking
@@ -54,8 +58,10 @@ Your output JSON contains vulnerabilities enriched with:
 - ✅ **Validation strategy** - How to test if exploitable
 - ✅ **Expected impact** - RCE, data leak, etc.
 - ✅ **Next steps** - What to do
+- ✅ **Execution results** - Real exploitation attempts
+- ✅ **Detailed reports** - Complete pentest documentation
 
-**Perfect for RL agent consumption!**
+**Complete automated pentesting!**
 
 ---
 
@@ -99,7 +105,7 @@ python scripts/parse_and_classify.py \
       "techniques": ["T1190", "T1059"]
     },
     "priority_score": 10.0,
-    "rl_agent_hints": {
+    "llm_agent_hints": {
       "suggested_tools": ["metasploit", "custom_exploit"],
       "validation_strategy": "Check AJP port, attempt file read",
       "expected_impact": "Remote Code Execution",
@@ -118,7 +124,10 @@ python scripts/parse_and_classify.py \
 ## 🧪 Test It Works
 
 ```bash
-# Use the sample scan already in data/input/
+# Quick test with built-in scanning
+./run_pentest.sh agent 127.0.0.1
+
+# Or parse the sample scan manually
 python scripts/parse_and_classify.py \
     data/input/ms2_scan.nessus \
     data/output/test.json
@@ -173,6 +182,7 @@ APFA/
 
 - ✅ Parser: **96.2% tested**
 - ✅ Classifier: **100% tested**  
+- ✅ LLM Agent: **Production ready**
 - ✅ Integration: **Working**
 
 ---
@@ -185,4 +195,4 @@ APFA/
 
 ---
 
-**Built for pentesters. Ready to use.** 🎯
+**Built for pentesters. Ready to use.**

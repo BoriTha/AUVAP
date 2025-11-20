@@ -14,25 +14,22 @@ enrichment:
   use_nessus: false
   nessus_file: null
   use_apfa_classifier: false
-agent:
-  model_name: ppo_metasploitable
-  learning_rate: 0.0003
-  n_steps: 2048
-  batch_size: 64
-  n_epochs: 10
-  ent_coef: 0.05
-  total_timesteps: 100000
+  agent:
+    model_name: intelligent_metasploitable
+    decision_strategy: heuristic
+    max_steps: 50
+    skill_persistence: persist_with_decay
 llm:
   models:
-  - name: local-codellama  # ENABLED & FIRST - Best for exploit code generation
+  - name: local-codellama
     provider: ollama
     model: codellama
     endpoint: http://localhost:11434
     temperature: 0.2
-    max_tokens: 4096  # INCREASED for longer exploits
-    timeout: 120  # INCREASED for complex generation
+    max_tokens: 4096
+    timeout: 120
     enabled: true
-  - name: dolphin-phi  # FALLBACK - Faster but weaker
+  - name: dolphin-phi
     provider: ollama
     model: dolphin-phi
     endpoint: http://localhost:11434
@@ -108,15 +105,14 @@ safety:
   - dd if=
   - mkfs
   - '> /dev/sda'
-mode:
-  type: hybrid
-  llm_only:
-    ranking_strategy: easy_first
-    use_rag: true
-  hybrid:
-    use_skill_library: true
-    use_metasploit: true
-    skill_persistence: persist_with_decay
+  mode:
+    type: agent
+    agent:
+      ranking_strategy: easy_first
+      use_rag: true
+      use_skill_library: true
+      use_metasploit: true
+      skill_persistence: persist_with_decay
 skill_library:
   enabled: true
   path: data/agent_results/skill_library.json
@@ -127,8 +123,8 @@ rag:
   enabled: true
   embedding_model: all-MiniLM-L6-v2
   vector_db_path: data/agent_results/rag_exploits.pkl
-  top_k: 5  # INCREASED - show more examples to weak models
-  similarity_threshold: 0.5  # LOWERED - retrieve more loosely related exploits
+  top_k: 5
+  similarity_threshold: 0.5
 metasploit:
   enabled: true
   rpc_host: 127.0.0.1
@@ -139,5 +135,5 @@ metasploit:
   auto_start: false
   module_map: config/msf_modules.yaml
   auto_discover: true
-  auto_discover_confidence_threshold: 0.25  # LOWERED - trust MSF more (was 0.4, originally 0.6)
+  auto_discover_confidence_threshold: 0.25
   auto_save_successful: true

@@ -3,7 +3,7 @@ from typing import List, Dict
 
 class LLMRanker:
     """
-    Ranks vulnerabilities for LLM-only mode.
+    Ranks vulnerabilities for Agent mode.
     Prioritizes easy/well-known exploits first.
     """
     
