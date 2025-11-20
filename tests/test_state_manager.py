@@ -3,7 +3,7 @@ import networkx as nx
 import numpy as np
 import os
 import json
-from apfa_agent.core.state_manager import StateManager, TRACKED_PORTS, STATE_OPEN, STATE_UNKNOWN
+from apfa_agent.core.state_manager import StateManager, DEFAULT_TRACKED_PORTS as TRACKED_PORTS, STATE_OPEN, STATE_UNKNOWN
 
 class TestStateManager(unittest.TestCase):
     def setUp(self):

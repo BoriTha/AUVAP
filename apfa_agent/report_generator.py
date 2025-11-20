@@ -59,10 +59,10 @@ class ReportGenerator:
     def generate_train_report(
         self,
         config: Dict,
-        ppo_agent: Any,
         tool_manager: Any,
         training_timesteps: int,
-        nmap_results: Optional[Dict] = None
+        nmap_results: Optional[Dict] = None,
+        agent: Any = None
     ) -> Dict:
         """Generate report for training mode"""
         
@@ -91,7 +91,7 @@ class ReportGenerator:
             },
             'training_config': {
                 'total_timesteps': training_timesteps,
-                'model_path': str(ppo_agent.model_path),
+                'agent_info': str(getattr(agent, 'stats', {})),
                 'learning_rate': config.get('learning_rate', 0.0003),
                 'n_steps': config.get('n_steps', 2048),
                 'batch_size': config.get('batch_size', 64)

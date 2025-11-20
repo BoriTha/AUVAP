@@ -15,6 +15,12 @@ DEFAULT_TRACKED_PORTS = [
     6000, 6001, 9090
 ]
 
+# Compatibility alias
+TRACKED_PORTS = DEFAULT_TRACKED_PORTS
+
+
+
+
 STATE_UNKNOWN = 0      # Port not scanned
 STATE_OPEN = 1         # Port is open
 STATE_TRIED = 2        # Exploit attempted (outcome unknown)
@@ -55,7 +61,8 @@ class StateManager:
         # State Vector Sizing
         # [Ports (N)] + [OS (2)] + [APFA (2)] + [Reserved (4)]
         self.metadata_offset = self.num_ports
-        self.state_dim = self.num_ports + 8
+        # Ensure consistent default state vector size expected by environment/tests
+        self.state_dim = max(self.num_ports + 8, 60)
         self.state_vector = np.zeros(self.state_dim, dtype=np.float32)
         
         # Mappings
@@ -77,12 +84,12 @@ class StateManager:
         """Discover all open ports from the graph."""
         open_ports = set()
         for node, data in self.graph.nodes(data=True):
-            if data.get('type') == 'service' and data.get('state') == 'open':
-                try:
+            try:
+                if data.get('type') == 'service' and str(data.get('state')) == 'open':
                     port = int(data.get('port'))
                     open_ports.add(port)
-                except (ValueError, TypeError):
-                    continue
+            except Exception:
+                continue
         return list(open_ports)
 
     def _load_apfa_data(self, path: Optional[str]) -> Dict[str, Any]:

@@ -30,6 +30,7 @@ from datetime import datetime
 import json
 import sys
 import os
+from typing import Optional, List
 
 # CRITICAL: Configure sys.path for module imports
 # This allows main_agent.py to find modules regardless of execution directory
@@ -47,7 +48,7 @@ if parent_dir not in sys.path:
 from core.nmap_scanner import NmapScanner
 from core.terrain_mapper import TerrainMapper
 from core.state_manager import StateManager
-from ppo_agent import PPOAgent
+from apfa_agent.simple_agent import SimpleHeuristicAgent
 from core.llm_client import UniversalLLMClient
 from core.executor import CowboyExecutor
 from msf_wrapper import MetasploitWrapper
@@ -244,37 +245,32 @@ def train_mode(config: dict, config_path: str, timesteps: int = None, apfa_path:
         skill_persistence=config.get('mode', {}).get('train', {}).get('skill_persistence', 'read_write')
     )
     
-    # Create PPO agent
-    # PPOAgent init: (self, state_manager, tool_manager, llm_client, executor, config_path)
-    ppo_agent = PPOAgent(state_mgr, tool_mgr, llm, executor, config_path)
-    ppo_agent.set_environment(env)
-    # ppo_agent.initialize_model(force_new=False) # This method might not exist in PPOAgent based on file read, checking...
-    # PPOAgent in file has self.model = None. It likely has a method to create/load model.
-    # Assuming train() handles initialization or we need to call something.
-    # Let's assume train() handles it or we use what's available.
+    # Create SimpleHeuristicAgent (replacing PPO)
+    agent = SimpleHeuristicAgent(state_mgr, tool_mgr, llm, executor, config_path)
+    agent.set_environment(env)
     
-    # Train
+    # Train (simulated episodes to gather skills)
     print("\n" + "="*60)
-    print("TRAINING PPO AGENT")
+    print("TRAINING AGENT")
     print("="*60)
     
     if timesteps is None:
         timesteps = config.get('agent', {}).get('total_timesteps', 10000)
     
-    print(f"Training for {timesteps} timesteps...")
-    ppo_agent.train(total_timesteps=timesteps)
+    print(f"Training for {timesteps} timesteps (heuristic agent)...")
+    train_metrics = agent.train(total_timesteps=timesteps)
     
     print("\nTraining complete!")
-    print(f"Model saved: {ppo_agent.model_path}")
+    print(f"Training metrics: {train_metrics}")
     
     # Generate training report
     report_gen = ReportGenerator()
     report = report_gen.generate_train_report(
         config=config,
-        ppo_agent=ppo_agent,
         tool_manager=tool_mgr,
         training_timesteps=timesteps,
-        nmap_results=nmap_results
+        nmap_results=nmap_results,
+        agent=agent
     )
     
     # Print skill library stats
@@ -368,13 +364,13 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
         skill_persistence=config.get('mode', {}).get('hybrid', {}).get('skill_persistence', 'read_write')
     )
     
-    ppo_agent = PPOAgent(state_mgr, tool_mgr, llm, executor, config_path)
-    ppo_agent.set_environment(env)
+    agent = SimpleHeuristicAgent(state_mgr, tool_mgr, llm, executor, config_path)
+    agent.set_environment(env)
     
-    # Check if model needs re-initialization due to dimension change
+    # Check if model needs re-initialization due to dimension change (no-op for heuristic)
     if scoped_ports:
-        print("Scoped mode active: Initializing fresh agent model for dynamic scope.")
-        ppo_agent.initialize_model(force_new=True)
+        print("Scoped mode active: Heuristic agent ready for dynamic scope.")
+        agent.initialize_model(force_new=True)
     
     # Run episode
     print("\n" + "="*60)
@@ -392,30 +388,19 @@ def hybrid_mode(config: dict, config_path: str, target_ip: str = None, apfa_path
         print(f"\n--- Step {step} ---")
         
         # PPO selects action
-        if ppo_agent.model is None:
-             try:
-                 ppo_agent.initialize_model() 
-             except Exception as e:
-                 print(f"Warning: Model load failed ({e}), starting fresh.")
-                 ppo_agent.initialize_model(force_new=True)
-        
-        # CRITICAL FIX: Add epsilon-greedy exploration to prevent getting stuck
-        # Use stochastic policy for first 10 steps to encourage exploration
-        import random
-        epsilon = 0.3 if step <= 10 else 0.1  # Higher exploration early on
-        if random.random() < epsilon:
-            # Random action
+        # Heuristic agent selection
+        try:
+            action, _ = agent.predict(obs, deterministic=False)
+        except Exception:
+            # Fallback to random action
             action = env.action_space.sample()
-            print(f"🎲 Exploring: Random action selected (ε={epsilon})")
-        else:
-            # Use deterministic=False for some stochasticity even when not exploring
-            action, _states = ppo_agent.model.predict(obs, deterministic=False)
+
         
         # Decode action for display
         try:
             port_index, method = env._decode_action(action)
             port_str = state_mgr.tracked_ports[port_index] if port_index is not None and port_index < len(state_mgr.tracked_ports) else 'N/A'
-            print(f"PPO selected: Port {port_str}, Method: {method}")
+            print(f"Agent selected: Port {port_str}, Method: {method}")
         except:
             print(f"PPO selected action: {action}")
         
@@ -483,13 +468,13 @@ def eval_mode(config: dict, config_path: str, n_episodes: int = 10, apfa_path: s
         skill_persistence=config.get('mode', {}).get('hybrid', {}).get('skill_persistence', 'read_write')
     )
     
-    ppo_agent = PPOAgent(state_mgr, tool_mgr, llm, executor, config_path)
-    ppo_agent.set_environment(env)
+    agent = SimpleHeuristicAgent(state_mgr, tool_mgr, llm, executor, config_path)
+    agent.set_environment(env)
     
     print(f"\nRunning {n_episodes} evaluation episodes...\n")
     
     # Evaluate agent
-    eval_results = ppo_agent.evaluate(n_episodes=n_episodes)
+    eval_results = agent.evaluate(n_episodes=n_episodes)
     
     # Generate evaluation report
     report_gen = ReportGenerator()
