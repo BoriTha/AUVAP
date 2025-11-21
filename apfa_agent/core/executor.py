@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Dict, Any, Optional
 
 from apfa_agent.config.safety import sanitize_code, is_running_in_vm, SecurityError
+from apfa_agent.utils.connectivity import verify_target_before_attack
 
 logger = logging.getLogger(__name__)
 
@@ -55,6 +56,22 @@ class CowboyExecutor:
             "evidence": None,
             "timestamp": timestamp
         }
+
+        # Check target connectivity before attempting exploit
+        logger.info(f"Checking connectivity to {target_ip}:{port}...")
+        connectivity_timeout = self.config.get('connectivity_timeout', 5)
+        is_reachable, connectivity_msg = verify_target_before_attack(
+            target_ip, port, timeout=connectivity_timeout
+        )
+        
+        if not is_reachable:
+            logger.error(f"Target {target_ip}:{port} is not reachable. Aborting execution.")
+            result["error"] = f"Target unreachable: {connectivity_msg}"
+            result["status"] = "target_unreachable"
+            result["output"] = f"❌ Connectivity check failed:\n{connectivity_msg}\n\nPossible causes:\n- VM/target is offline\n- Network connectivity issues\n- Firewall blocking connection\n- Wrong IP address or port\n\nPlease verify the target is online and accessible."
+            return result
+        
+        logger.info(f"✓ Target {target_ip}:{port} is reachable, proceeding with exploit execution...")
 
         try:
             # 1. Sanitize Code

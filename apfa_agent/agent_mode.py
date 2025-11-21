@@ -11,6 +11,11 @@ from apfa_agent.tool_manager import ToolManager
 from apfa_agent.rag_manager import RAGManager
 from apfa_agent.prompts import SYSTEM_PROMPT, RAG_CONTEXT_PROMPT, ERROR_RETRY_PROMPT
 from apfa_agent.report_generator import ReportGenerator
+from apfa_agent.utils.connectivity import (
+    verify_target_before_attack,
+    clear_connectivity_cache,
+    get_connectivity_cache_stats
+)
 
 logger = logging.getLogger(__name__)
 
@@ -47,6 +52,10 @@ class SmartTriageAgent:
         Run the Smart Triage process.
         """
         print("🚀 Starting Smart Triage (Agent mode)...")
+        
+        # Clear connectivity cache at start of new run to ensure fresh checks
+        clear_connectivity_cache()
+        logger.info("Connectivity cache cleared for new agent run")
         
         # 1. Rank Targets
         if classified_json_path:
@@ -92,6 +101,37 @@ class SmartTriageAgent:
         for i, target in enumerate(targets):
             print(f"\n[{i+1}/{len(targets)}] Attacking {target['ip']}:{target['port']} ({target['service']})...")
             
+            # Pre-flight connectivity check
+            print("  🔍 Checking target connectivity...")
+            connectivity_timeout = self.config.get('connectivity_timeout', 5)
+            is_reachable, connectivity_msg = verify_target_before_attack(
+                target['ip'], int(target['port']), timeout=connectivity_timeout
+            )
+            
+            if not is_reachable:
+                print(f"  ❌ Target unreachable: {connectivity_msg}")
+                print("  ⏭️  Skipping to next target...")
+                
+                # If this is the first failure for this IP, it's a real check
+                # If cached, we skip quickly without redundant network operations
+                if "(cached)" in connectivity_msg:
+                    print(f"  ℹ️  Using cached result - already known to be unreachable")
+                
+                result_entry = {
+                    'target': target,
+                    'success': False,
+                    'details': {
+                        'status': 'target_unreachable',
+                        'error': connectivity_msg,
+                        'output': f"Target {target['ip']}:{target['port']} is not reachable. Please verify:\n- VM/target is online\n- Network connectivity\n- Correct IP/port"
+                    },
+                    'timestamp': datetime.now().isoformat()
+                }
+                results.append(result_entry)
+                continue
+            
+            print(f"  ✓ Target is reachable, proceeding with attack...")
+            
             # 2. Check if we have a cached skill or MSF module
             # In Agent mode, we might still want to use known tools if available
             # But the prompt emphasizes "Execute attacks sequentially" and "Use RAG".
@@ -123,6 +163,14 @@ class SmartTriageAgent:
             results=results,
             nmap_results=nmap_results
         )
+        
+        # Show connectivity cache statistics
+        cache_stats = get_connectivity_cache_stats()
+        print("\n📊 Connectivity Check Statistics:")
+        print(f"   • Unique IPs checked: {cache_stats['total_ips']}")
+        print(f"   • Total ports checked: {cache_stats['total_ports_checked']}")
+        print(f"   • Cache hits saved: {cache_stats['total_ports_checked'] - cache_stats['total_ips']} redundant checks")
+        
         print("\n🏁 Smart Triage completed.")
         return results
 

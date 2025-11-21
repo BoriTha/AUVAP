@@ -28,8 +28,51 @@ class LLMRanker:
         with open(classified_json_path) as f:
             data = json.load(f)
         
-        vulns = data.get('vulnerabilities', [])
-        return self.rank_list(vulns)
+        # Handle both formats: list directly or dict with 'vulnerabilities' key
+        if isinstance(data, list):
+            vulns = data
+        else:
+            vulns = data.get('vulnerabilities', [])
+        
+        # Transform flat vulnerability structure to expected nested format
+        transformed_vulns = []
+        for vuln in vulns:
+            # Check if already in correct format (has 'original' key)
+            if 'original' in vuln:
+                transformed_vulns.append(vuln)
+            else:
+                # Transform flat structure to nested format
+                # Extract version from product name if available
+                pn = vuln.get('pn', '')
+                version = ''
+                # Try to extract version from product name (simple heuristic)
+                parts = pn.split()
+                for part in parts:
+                    if any(char.isdigit() for char in part):
+                        version = part
+                        break
+                
+                transformed = {
+                    'ip': vuln.get('h'),
+                    'port': vuln.get('p'),
+                    'service': vuln.get('svc', 'unknown'),
+                    'protocol': vuln.get('proto', 'tcp'),
+                    'version': version,  # Add version at top level for agent_mode.py
+                    'cve': vuln.get('c', ''),  # Add CVE at top level for agent_mode.py
+                    'original': {
+                        'pn': pn,
+                        'name': pn,
+                        'cvss': vuln.get('cvss', 0),
+                        'cve': vuln.get('c', ''),
+                        'description': vuln.get('d', ''),
+                        'solution': vuln.get('sol', ''),
+                        'risk': vuln.get('risk', ''),
+                        'plugin_family': vuln.get('pf', '')
+                    }
+                }
+                transformed_vulns.append(transformed)
+        
+        return self.rank_list(transformed_vulns)
 
     def rank_list(self, vulns: List[Dict]) -> List[Dict]:
         """Rank a list of vulnerability dictionaries"""
