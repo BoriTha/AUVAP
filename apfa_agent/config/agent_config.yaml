@@ -10,6 +10,20 @@ scanning:
     output_dir: data/scans
     cache_duration: 3600
   sudo: false
+enrichment:
+  use_nessus: false
+  nessus_file: null
+  use_apfa_classifier: false
+  agent:
+    model_name: intelligent_metasploitable
+    decision_strategy: heuristic
+    max_steps: 50
+    skill_persistence: persist_with_decay
+agent:
+  model_name: intelligent_metasploitable
+  decision_strategy: heuristic
+  max_steps: 50
+  skill_persistence: persist_with_decay
 llm:
   models:
   - name: local-codellama
@@ -81,6 +95,10 @@ llm:
     rotate_on_failure: true
     retry_with_error_feedback: true
     max_retries: 2
+execution:
+  mode: aggressive
+  timeout: 60
+  max_retries: 2
 safety:
   require_vm: true
   allowed_targets:
@@ -100,24 +118,6 @@ safety:
       use_skill_library: true
       use_metasploit: true
       skill_persistence: persist_with_decay
-execution:
-  mode: cowboy
-  timeout: 60
-  max_retries: 2
-enrichment:
-  use_nessus: false
-  nessus_file: null
-  use_apfa_classifier: false
-  agent:
-    model_name: intelligent_metasploitable
-    decision_strategy: heuristic
-    max_steps: 50
-    skill_persistence: persist_with_decay
-agent:
-  model_name: intelligent_metasploitable
-  decision_strategy: heuristic
-  max_steps: 50
-  skill_persistence: persist_with_decay
 metasploit:
   enabled: true
   rpc_host: 127.0.0.1

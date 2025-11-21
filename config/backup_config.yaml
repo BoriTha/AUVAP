@@ -1,5 +1,5 @@
 target:
-  ip: '0'
+  ip: 192.168.187.128
   description: Metasploitable 2
 scanning:
   mode: auto
@@ -10,20 +10,6 @@ scanning:
     output_dir: data/scans
     cache_duration: 3600
   sudo: false
-enrichment:
-  use_nessus: false
-  nessus_file: null
-  use_apfa_classifier: false
-  agent:
-    model_name: intelligent_metasploitable
-    decision_strategy: heuristic
-    max_steps: 50
-    skill_persistence: persist_with_decay
-agent:
-  model_name: intelligent_metasploitable
-  decision_strategy: heuristic
-  max_steps: 50
-  skill_persistence: persist_with_decay
 llm:
   models:
   - name: local-codellama
@@ -41,7 +27,7 @@ llm:
     temperature: 0.1
     max_tokens: 8192
     timeout: 120
-    enabled: true
+    enabled: false
   - name: dolphin-llama3
     provider: ollama
     model: dolphin-llama3
@@ -49,7 +35,7 @@ llm:
     temperature: 0.1
     max_tokens: 8192
     timeout: 120
-    enabled: true
+    enabled: false
   - name: local-llama3
     provider: ollama
     model: llama3
@@ -65,7 +51,7 @@ llm:
     temperature: 0.1
     max_tokens: 1500
     timeout: 60
-    enabled: true
+    enabled: false
   - name: longcat-flash-chat
     provider: openrouter
     model: meituan/longcat-flash-chat:free
@@ -73,7 +59,7 @@ llm:
     temperature: 0.1
     max_tokens: 1500
     timeout: 60
-    enabled: true
+    enabled: false
   - name: qwen-free
     provider: openrouter
     model: qwen/qwen-2.5-72b-instruct:free
@@ -81,7 +67,7 @@ llm:
     temperature: 0.1
     max_tokens: 1500
     timeout: 60
-    enabled: true
+    enabled: false
   - name: phi-free
     provider: openrouter
     model: microsoft/phi-4:free
@@ -89,16 +75,12 @@ llm:
     temperature: 0.1
     max_tokens: 1500
     timeout: 60
-    enabled: true
+    enabled: false
   retry:
     max_failures_per_model: 3
     rotate_on_failure: true
     retry_with_error_feedback: true
     max_retries: 2
-execution:
-  mode: cowboy
-  timeout: 60
-  max_retries: 2
 safety:
   require_vm: true
   allowed_targets:
@@ -118,6 +100,24 @@ safety:
       use_skill_library: true
       use_metasploit: true
       skill_persistence: persist_with_decay
+execution:
+  mode: cowboy
+  timeout: 60
+  max_retries: 2
+enrichment:
+  use_nessus: false
+  nessus_file: null
+  use_apfa_classifier: false
+  agent:
+    model_name: intelligent_metasploitable
+    decision_strategy: heuristic
+    max_steps: 50
+    skill_persistence: persist_with_decay
+agent:
+  model_name: intelligent_metasploitable
+  decision_strategy: heuristic
+  max_steps: 50
+  skill_persistence: persist_with_decay
 metasploit:
   enabled: true
   rpc_host: 127.0.0.1

