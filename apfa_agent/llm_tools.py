@@ -27,77 +27,242 @@ logger = logging.getLogger(__name__)
 # ============================================================================
 
 def search_msf_modules(
-    service: str,
-    version: str = "",
+    query: str,
+    service: Optional[str] = None,
+    version: Optional[str] = None,
     port: Optional[int] = None,
     cve: Optional[str] = None,
-    msf_wrapper = None
+    msf_wrapper = None,
+    max_results: int = 10
 ) -> List[Dict[str, Any]]:
     """
     Search Metasploit's module database for matching exploits.
     
+    The LLM can search freely with any query string to find relevant modules.
+    
     Args:
-        service: Service name (e.g., "vsftpd", "samba")
-        version: Service version (e.g., "2.3.4")
-        port: Port number (e.g., 21)
-        cve: CVE identifier (e.g., "CVE-2011-2523")
+        query: Free-form search query (e.g., "vsftpd backdoor", "samba usermap", "unreal irc")
+        service: Optional service name for context (e.g., "vsftpd", "samba")
+        version: Optional version for context (e.g., "2.3.4")
+        port: Optional port number for filtering (e.g., 21)
+        cve: Optional CVE identifier (e.g., "CVE-2011-2523")
         msf_wrapper: MSF wrapper instance (optional)
+        max_results: Maximum number of results to return (default: 10)
     
     Returns:
-        List of matching modules with metadata
+        List of matching modules with detailed metadata for LLM to choose from
+        
+    Example LLM usage:
+        1. search_msf_modules(query="vsftpd") → Find all vsftpd exploits
+        2. search_msf_modules(query="backdoor", service="vsftpd") → Find backdoor exploits for vsftpd
+        3. search_msf_modules(query="samba usermap") → Find samba usermap exploit
     """
-    logger.info(f"[TOOL] search_msf_modules(service={service}, version={version}, port={port}, cve={cve})")
+    logger.info(f"[TOOL] search_msf_modules(query='{query}', service={service}, version={version}, port={port}, cve={cve})")
     
     results = []
+    seen_modules = set()
     
-    # Method 1: Use MSF wrapper if available
-    if msf_wrapper:
+    # Method 1: Search via MSF RPC (most comprehensive)
+    if msf_wrapper and msf_wrapper.client:
         try:
-            # Try to get module info directly
-            sig = f"{service} {version}".strip()
+            # Use service-specific search queries for better results
+            if service and service.lower() != "unknown":
+                # Create more targeted search queries
+                service_queries = [
+                    f"{service} {version}" if version else service,
+                    f"{service}/",
+                    f"{service} exploit",
+                    f"{service} vulnerability"
+                ]
+                search_results = []
+                for service_query in service_queries:
+                    try:
+                        query_results = msf_wrapper.client.modules.search(service_query)
+                        search_results.extend(query_results)
+                    except:
+                        continue
+            else:
+                # Fallback to original query
+                search_results = msf_wrapper.client.modules.search(query)
+            
+            for module in search_results:
+                module_path = module.get('fullname', '')
+                
+                # Skip if already seen
+                if module_path in seen_modules:
+                    continue
+                seen_modules.add(module_path)
+                
+                # Filter by type (exploits and auxiliary)
+                module_type = 'exploit' if 'exploit/' in module_path else 'auxiliary'
+                
+                # Service-specific filtering to avoid inappropriate matches
+                if service:
+                    service_lower = service.lower()
+                    module_path_lower = module_path.lower()
+                    description_lower = module.get('description', '').lower()
+                    
+                    # Require module path to contain the service name for better matching
+                    # This ensures FTP exploits actually contain "ftp" in their path
+                    service_patterns = {
+                        'ftp': ['ftp/'],
+                        'ssh': ['ssh/'],
+                        'smb': ['smb/'],
+                        'smtp': ['smtp/'],
+                        'telnet': ['telnet/'],
+                        'http': ['http/', 'https/'],
+                        'https': ['http/', 'https/'],
+                        'mysql': ['mysql/'],
+                        'postgresql': ['postgresql/', 'postgres/'],
+                        'irc': ['irc/'],
+                    }
+                    
+                    # Skip if module path doesn't contain expected service pattern
+                    if service_lower in service_patterns:
+                        has_service_pattern = any(pattern in module_path_lower 
+                                               for pattern in service_patterns[service_lower])
+                        if not has_service_pattern:
+                            continue
+                    
+                    # Additional filtering for obviously mismatched services
+                    skip_patterns = {
+                        'ftp': ['webapp/', 'www'],
+                        'ssh': ['webapp/', 'www'],
+                        'smb': ['webapp/', 'www'],
+                        'smtp': ['webapp/', 'www'],
+                        'telnet': ['webapp/', 'www'],
+                        'http': ['ftp/', 'ssh/', 'smb/', 'smtp/'],
+                        'https': ['ftp/', 'ssh/', 'smb/', 'smtp/'],
+                        'mysql': ['webapp/', 'www'],
+                        'postgresql': ['webapp/', 'www'],
+                        'irc': ['webapp/', 'www'],
+                    }
+                    
+                    # Check if module path contains incompatible service patterns
+                    should_skip = False
+                    if service_lower in skip_patterns:
+                        for bad_pattern in skip_patterns[service_lower]:
+                            if bad_pattern in module_path_lower:
+                                # Skip this module as it's for a different service
+                                should_skip = True
+                                break
+                    
+                    if should_skip:
+                        continue
+                
+                # Get detailed module information
+                    try:
+                        msf_module = msf_wrapper.client.modules.use(module_type, module_path)
+                        
+                        # Extract required options and ports
+                        required_opts = {}
+                        target_ports = []
+                        
+                        if msf_module and hasattr(msf_module, 'options'):
+                            for opt_name, opt_info in msf_module.options.items():
+                                if opt_info.get('required'):
+                                    required_opts[opt_name] = opt_info.get('default', '')
+                                
+                                # Extract port from RPORT option
+                                if opt_name == 'RPORT':
+                                    try:
+                                        target_ports.append(int(opt_info.get('default', 0)))
+                                    except:
+                                        pass
+                        
+                        # Extract description
+                        description = module.get('description', module.get('name', ''))
+                        
+                        # Determine rank/reliability
+                        rank = module.get('rank', 'unknown')
+                        rank_scores = {
+                            'excellent': 5,
+                            'great': 4,
+                            'good': 3,
+                            'normal': 2,
+                            'average': 2,
+                            'low': 1,
+                            'manual': 1
+                        }
+                        reliability_score = rank_scores.get(rank.lower(), 0)
+                        
+                        results.append({
+                            "module": module_path,
+                            "type": module_type,
+                            "name": module.get('name', ''),
+                            "description": description[:200],  # Truncate long descriptions
+                            "rank": rank,
+                            "reliability_score": reliability_score,
+                            "disclosure_date": module.get('disclosure_date', ''),
+                            "ports": target_ports,
+                            "required_options": list(required_opts.keys()),
+                            "source": "msf_rpc_search",
+                            "search_query": query
+                        })
+                        
+                    except Exception as e:
+                        # If can't get details, still add basic info with reliability score
+                        rank = module.get('rank', 'normal')
+                        rank_scores = {
+                            'excellent': 5,
+                            'great': 4,
+                            'good': 3,
+                            'normal': 2,
+                            'average': 2,
+                            'low': 1,
+                            'manual': 1
+                        }
+                        reliability_score = rank_scores.get(rank.lower(), 2)  # Default to 2 (normal)
+                        
+                        results.append({
+                            "module": module_path,
+                            "type": module_type,
+                            "name": module.get('name', ''),
+                            "description": module.get('description', '')[:200],
+                            "rank": rank,
+                            "reliability_score": reliability_score,
+                            "source": "msf_rpc_search",
+                            "search_query": query
+                        })
+            
+            logger.info(f"[TOOL] MSF RPC search found {len(results)} modules")
+            
+        except Exception as e:
+            logger.error(f"MSF RPC search failed: {e}")
+    
+    # Method 2: Check manual mapping (high-confidence results)
+    if msf_wrapper and service:
+        try:
+            sig = f"{service} {version}".strip() if version else service
             module_info = msf_wrapper.get_module_info(sig)
             
             if module_info:
-                results.append({
-                    "module": module_info.get("module"),
-                    "name": sig,
-                    "source": module_info.get("source", "manual"),
-                    "reliability": module_info.get("reliability", "unknown"),
-                    "payload": module_info.get("payload"),
-                    "ports": module_info.get("ports", [port] if port else [])
-                })
+                module_path = module_info.get("module")
+                if module_path and module_path not in seen_modules:
+                    seen_modules.add(module_path)
+                    results.insert(0, {  # Insert at front (highest priority)
+                        "module": module_path,
+                        "type": "exploit" if "exploit/" in module_path else "auxiliary",
+                        "name": sig,
+                        "source": module_info.get("source", "manual"),
+                        "reliability": module_info.get("reliability", "unknown"),
+                        "reliability_score": 5,  # Manual mappings are highest trust
+                        "payload": module_info.get("payload"),
+                        "ports": module_info.get("ports", [port] if port else []),
+                        "cve": module_info.get("cve"),
+                        "search_query": query,
+                        "note": "This is a manually curated mapping with verified reliability"
+                    })
         except Exception as e:
-            logger.error(f"MSF wrapper search failed: {e}")
+            logger.error(f"MSF wrapper mapping check failed: {e}")
     
-    # Method 2: Use msfconsole command-line search
-    try:
-        search_term = f"{service} {version}".strip()
-        cmd = ["msfconsole", "-q", "-x", f"search {search_term}; exit"]
-        
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            timeout=10
-        )
-        
-        if result.returncode == 0:
-            # Parse msfconsole output
-            lines = result.stdout.split('\n')
-            for line in lines:
-                if 'exploit/' in line or 'auxiliary/' in line:
-                    parts = line.split()
-                    if parts:
-                        results.append({
-                            "module": parts[0],
-                            "name": ' '.join(parts[1:]) if len(parts) > 1 else parts[0],
-                            "source": "msfconsole_search",
-                            "search_term": search_term
-                        })
-    except Exception as e:
-        logger.error(f"msfconsole search failed: {e}")
+    # Sort by reliability score (highest first)
+    results.sort(key=lambda x: x.get('reliability_score', 0), reverse=True)
     
-    logger.info(f"[TOOL] Found {len(results)} MSF modules")
+    # Limit results
+    results = results[:max_results]
+    
+    logger.info(f"[TOOL] Returning {len(results)} MSF modules for LLM selection")
     return results
 
 
@@ -348,28 +513,32 @@ TOOL_DEFINITIONS = [
         "type": "function",
         "function": {
             "name": "search_msf_modules",
-            "description": "Search Metasploit's exploit database for modules matching a service/vulnerability. Returns professional exploit modules with reliability ratings.",
+            "description": "Search Metasploit's exploit database with ANY search query. You can search by service name, version, vulnerability type, CVE, or keywords. Returns ranked modules with detailed metadata so you can choose the best one. Try multiple searches with different keywords to find the right exploit.",
             "parameters": {
                 "type": "object",
                 "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Free-form search query. Examples: 'vsftpd', 'samba usermap', 'backdoor ftp', 'unreal irc', 'distcc', 'proftpd 1.3'. Be creative with keywords!"
+                    },
                     "service": {
                         "type": "string",
-                        "description": "Service name (e.g., 'vsftpd', 'samba', 'unrealircd')"
+                        "description": "Optional: Service name for context (e.g., 'vsftpd', 'samba', 'unrealircd')"
                     },
                     "version": {
                         "type": "string",
-                        "description": "Service version (e.g., '2.3.4', '3.0.20')"
+                        "description": "Optional: Service version for context (e.g., '2.3.4', '3.0.20')"
                     },
                     "port": {
                         "type": "integer",
-                        "description": "Port number (e.g., 21, 139, 445)"
+                        "description": "Optional: Port number for filtering (e.g., 21, 139, 445)"
                     },
                     "cve": {
                         "type": "string",
-                        "description": "CVE identifier (e.g., 'CVE-2011-2523')"
+                        "description": "Optional: CVE identifier (e.g., 'CVE-2011-2523')"
                     }
                 },
-                "required": ["service"]
+                "required": ["query"]
             }
         }
     },
@@ -452,8 +621,9 @@ def execute_tool(tool_name: str, arguments: Dict[str, Any], context: Optional[Di
     
     if tool_name == "search_msf_modules":
         return search_msf_modules(
-            service=arguments.get("service", ""),
-            version=arguments.get("version", ""),
+            query=arguments.get("query", arguments.get("service", "")),  # Allow query or service
+            service=arguments.get("service"),
+            version=arguments.get("version"),
             port=arguments.get("port"),
             cve=arguments.get("cve"),
             msf_wrapper=context.get("msf_wrapper")

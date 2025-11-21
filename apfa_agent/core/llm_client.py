@@ -224,19 +224,22 @@ class UniversalLLMClient:
             sys.exit(1)
             
         # Non-blocking fallback: default to DUMMY for non-interactive environments or EOF
-            print("    Do you want to switch to DUMMY mode (simulated exploits)?")
-            try:
-                choice = input("    [Y]es (dummy mode) / [N]o (stop execution): ").strip().lower()
-            except (EOFError, KeyboardInterrupt):
-                print("    Non-interactive input detected: Switching to DUMMY mode.")
-                return True
-            
-            if choice in ['y', 'yes', 'dummy', 'd']:
-                print("    -> Switching to DUMMY mode. Exploits will be simulated.")
-                return True
-            elif choice in ['n', 'no', 'stop', 's', '']:
-                print("    -> Stopping execution. Please fix the LLM configuration.")
-                sys.exit(1)
+        print("    Do you want to switch to DUMMY mode (simulated exploits)?")
+        try:
+            choice = input("    [Y]es (dummy mode) / [N]o (stop execution): ").strip().lower()
+        except (EOFError, KeyboardInterrupt):
+            print("    Non-interactive input detected: Switching to DUMMY mode.")
+            return True
+        
+        if choice in ['y', 'yes', 'dummy', 'd']:
+            print("    -> Switching to DUMMY mode. Exploits will be simulated.")
+            return True
+        elif choice in ['n', 'no', 'stop', 's', '']:
+            print("    -> Stopping execution. Please fix the LLM configuration.")
+            sys.exit(1)
+        
+        # Default fallback
+        return False
 
     def _gather_tool_context(self, target_info: Dict) -> str:
         """
@@ -264,7 +267,10 @@ class UniversalLLMClient:
         
         # Tool 1: Search Metasploit
         try:
+            # Build search query
+            query = f"{service} {version}".strip() if service and version else service or "unknown"
             msf_modules = search_msf_modules(
+                query=query,
                 service=service,
                 version=version,
                 port=port,

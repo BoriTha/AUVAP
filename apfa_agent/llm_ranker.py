@@ -39,7 +39,27 @@ class LLMRanker:
         for vuln in vulns:
             # Check if already in correct format (has 'original' key)
             if 'original' in vuln:
-                transformed_vulns.append(vuln)
+                # Already classified format - extract data from original
+                original = vuln.get('original', {})
+                pn = original.get('pn', '')
+                version = ''
+                # Try to extract version from product name (simple heuristic)
+                parts = pn.split()
+                for part in parts:
+                    if any(char.isdigit() for char in part):
+                        version = part
+                        break
+                
+                transformed = {
+                    'ip': original.get('h', ''),
+                    'port': original.get('p', 0),
+                    'service': original.get('svc', 'unknown'),
+                    'protocol': original.get('proto', 'tcp'),
+                    'version': version,  # Add version at top level for agent_mode.py
+                    'cve': original.get('c', ''),  # Add CVE at top level for agent_mode.py
+                    'original': original
+                }
+                transformed_vulns.append(transformed)
             else:
                 # Transform flat structure to nested format
                 # Extract version from product name if available

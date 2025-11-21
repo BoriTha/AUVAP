@@ -1,5 +1,5 @@
 target:
-  ip: 192.168.187.128
+  ip: 192.168.187.129
   description: Metasploitable 2
 scanning:
   mode: auto
@@ -130,6 +130,7 @@ metasploit:
   auto_discover: true
   auto_discover_confidence_threshold: 0.25
   auto_save_successful: true
+  session_wait_timeout: 30
 rag:
   enabled: true
   embedding_model: all-MiniLM-L6-v2

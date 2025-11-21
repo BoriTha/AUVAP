@@ -1,0 +1,200 @@
+{
+  "target": "192.168.187.129",
+  "timestamp": "20251121_184118",
+  "scan_type": "auto_discovery",
+  "results": {
+    "hosts": [
+      {
+        "ip": "192.168.187.129",
+        "status": "up",
+        "os": "unknown",
+        "services": [
+          {
+            "port": 21,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "ftp",
+            "product": "vsftpd",
+            "version": "2.3.4"
+          },
+          {
+            "port": 22,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "ssh",
+            "product": "OpenSSH",
+            "version": "4.7p1 Debian 8ubuntu1"
+          },
+          {
+            "port": 23,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "telnet",
+            "product": "Linux telnetd",
+            "version": "unknown"
+          },
+          {
+            "port": 25,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "smtp",
+            "product": "Postfix smtpd",
+            "version": "unknown"
+          },
+          {
+            "port": 53,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "domain",
+            "product": "ISC BIND",
+            "version": "9.4.2"
+          },
+          {
+            "port": 80,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "http",
+            "product": "Apache httpd",
+            "version": "2.2.8"
+          },
+          {
+            "port": 111,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "rpcbind",
+            "product": "unknown",
+            "version": "2"
+          },
+          {
+            "port": 139,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "netbios-ssn",
+            "product": "Samba smbd",
+            "version": "3.X - 4.X"
+          },
+          {
+            "port": 445,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "netbios-ssn",
+            "product": "Samba smbd",
+            "version": "3.0.20-Debian"
+          },
+          {
+            "port": 512,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "exec",
+            "product": "netkit-rsh rexecd",
+            "version": "unknown"
+          },
+          {
+            "port": 513,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "login",
+            "product": "unknown",
+            "version": "unknown"
+          },
+          {
+            "port": 514,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "tcpwrapped",
+            "product": "unknown",
+            "version": "unknown"
+          },
+          {
+            "port": 1099,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "java-rmi",
+            "product": "GNU Classpath grmiregistry",
+            "version": "unknown"
+          },
+          {
+            "port": 1524,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "bindshell",
+            "product": "Metasploitable root shell",
+            "version": "unknown"
+          },
+          {
+            "port": 2049,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "nfs",
+            "product": "unknown",
+            "version": "2-4"
+          },
+          {
+            "port": 2121,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "ftp",
+            "product": "ProFTPD",
+            "version": "1.3.1"
+          },
+          {
+            "port": 3306,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "mysql",
+            "product": "MySQL",
+            "version": "5.0.51a-3ubuntu5"
+          },
+          {
+            "port": 5432,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "postgresql",
+            "product": "PostgreSQL DB",
+            "version": "8.3.0 - 8.3.7"
+          },
+          {
+            "port": 5900,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "vnc",
+            "product": "VNC",
+            "version": "unknown"
+          },
+          {
+            "port": 6000,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "X11",
+            "product": "unknown",
+            "version": "unknown"
+          },
+          {
+            "port": 6667,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "irc",
+            "product": "UnrealIRCd",
+            "version": "unknown"
+          },
+          {
+            "port": 8009,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "ajp13",
+            "product": "Apache Jserv",
+            "version": "unknown"
+          },
+          {
+            "port": 8180,
+            "protocol": "tcp",
+            "state": "open",
+            "service": "http",
+            "product": "Apache Tomcat/Coyote JSP engine",
+            "version": "1.1"
+          }
+        ]
+      }
+    ]
+  }
+}

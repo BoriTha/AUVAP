@@ -209,7 +209,7 @@ class SmartTriageAgent:
         
         # Step 1: Decide which exploitation method to use
         print(f"  🔍 Determining best exploitation method...")
-        exploit_method, exploit_data = self.tool_manager.get_exploit_method(service_sig)
+        exploit_method, exploit_data = self.tool_manager.get_exploit_method(service_sig, port=port)
         
         # Step 2: Execute based on method
         result = None
@@ -349,10 +349,10 @@ class SmartTriageAgent:
             }
         
         module_path = module_data.get('module', '')
-        payload = module_data.get('payload', 'cmd/unix/interact')
+        payload = module_data.get('payload', None)  # Let MSF wrapper auto-select
         
         print(f"    • Module: {module_path}")
-        print(f"    • Payload: {payload}")
+        print(f"    • Payload: {payload or 'auto-select'}")
         print(f"    • Target: {target_ip}:{port}")
         
         # Prepare options
