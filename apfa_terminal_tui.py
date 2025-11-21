@@ -100,6 +100,7 @@ class TerminalTUI:
         self.selected_nessus_file = None
         self.vuln_processor = None
         self.active_filters = []
+        self.selected_vulns = set()  # Track selected vulnerabilities for verification
         
         # Set up signal handlers
         signal.signal(signal.SIGINT, self._signal_handler)
@@ -392,6 +393,8 @@ class TerminalTUI:
         
         # Working copy for filtering
         filtered_vulns = self.current_vulns.copy()
+        # Reset selected vulnerabilities when starting browser
+        self.selected_vulns = set()
         
         while True:
             self._clear_screen()
@@ -403,21 +406,25 @@ class TerminalTUI:
             page_vulns = filtered_vulns[start_idx:end_idx]
             
             # Header
-            print(f"\n{Colors.BOLD}{Colors.CYAN}{'=' * 100}{Colors.RESET}")
-            print(f"{Colors.BOLD}{Colors.CYAN}|| VULNERABILITY BROWSER{Colors.RESET} - Page {current_page + 1}/{total_pages} ({len(filtered_vulns)} vulns){' ' * 40}{Colors.BOLD}{Colors.CYAN}||{Colors.RESET}")
-            print(f"{Colors.BOLD}{Colors.CYAN}{'=' * 100}{Colors.RESET}\n")
+            print(f"\n{Colors.BOLD}{Colors.CYAN}{'=' * 110}{Colors.RESET}")
+            print(f"{Colors.BOLD}{Colors.CYAN}|| VULNERABILITY BROWSER{Colors.RESET} - Page {current_page + 1}/{total_pages} ({len(filtered_vulns)} vulns, {len(self.selected_vulns)} selected){' ' * 30}{Colors.BOLD}{Colors.CYAN}||{Colors.RESET}")
+            print(f"{Colors.BOLD}{Colors.CYAN}{'=' * 110}{Colors.RESET}\n")
             
             # Show active filters
             if self.active_filters:
                 print(f"{Colors.YELLOW}Active Filters:{Colors.RESET} {', '.join(self.active_filters)}\n")
             
-            # Column headers
-            print(f"{Colors.BOLD}{'#':<4} {'Severity':<10} {'CVE':<18} {'CVSS':<6} {'Port':<6} {'Host':<16} {'Name'[:40]:<42}{Colors.RESET}")
-            print(f"{Colors.DIM}{'-' * 100}{Colors.RESET}")
+            # Column headers with 'Sel' column
+            print(f"{Colors.BOLD}{'#':<4} {'Sel':<4} {'Severity':<10} {'CVE':<18} {'CVSS':<6} {'Port':<6} {'Host':<16} {'Name'[:40]:<42}{Colors.RESET}")
+            print(f"{Colors.DIM}{'-' * 110}{Colors.RESET}")
             
             # Vulnerability rows
             for i, vuln in enumerate(page_vulns):
                 idx = start_idx + i
+                # Check if this vulnerability is selected
+                is_selected = idx in self.selected_vulns
+                sel_marker = '✓' if is_selected else ' '
+                
                 severity = vuln.get('s', 0)
                 severity_colors = {0: Colors.DIM, 1: Colors.WHITE, 2: Colors.YELLOW, 3: Colors.RED, 4: Colors.BOLD + Colors.RED}
                 severity_names = {0: "Info", 1: "Low", 2: "Medium", 3: "High", 4: "Critical"}
@@ -431,15 +438,26 @@ class TerminalTUI:
                 host = vuln.get('h', 'N/A')[:15]
                 name = vuln.get('pn', 'Unknown')[:40]
                 
+                # Apply highlighting: cursor (reverse) + selection (green background)
                 if idx == current_vuln:
-                    print(f"{Colors.REVERSE}{idx:<4} {sev_color}{sev_name:<10}{Colors.RESET}{Colors.REVERSE} {cve:<18} {cvss:<6.1f} {port:<6} {host:<16} {name:<42}{Colors.RESET}")
+                    if is_selected:
+                        # Cursor on selected item: reverse + green color
+                        print(f"{Colors.REVERSE}{Colors.GREEN}{idx:<4} {sel_marker:<4} {sev_name:<10} {cve:<18} {cvss:<6.1f} {port:<6} {host:<16} {name:<42}{Colors.RESET}")
+                    else:
+                        # Cursor on unselected item: reverse only
+                        print(f"{Colors.REVERSE}{idx:<4} {sel_marker:<4} {sev_color}{sev_name:<10}{Colors.RESET}{Colors.REVERSE} {cve:<18} {cvss:<6.1f} {port:<6} {host:<16} {name:<42}{Colors.RESET}")
                 else:
-                    print(f"{idx:<4} {sev_color}{sev_name:<10}{Colors.RESET} {cve:<18} {cvss:<6.1f} {port:<6} {host:<16} {name:<42}")
+                    if is_selected:
+                        # Selected item: green color
+                        print(f"{Colors.GREEN}{idx:<4} {sel_marker:<4} {sev_color}{sev_name:<10}{Colors.RESET}{Colors.GREEN} {cve:<18} {cvss:<6.1f} {port:<6} {host:<16} {name:<42}{Colors.RESET}")
+                    else:
+                        # Normal unselected item: no special color
+                        print(f"{idx:<4} {sel_marker:<4} {sev_color}{sev_name:<10}{Colors.RESET} {cve:<18} {cvss:<6.1f} {port:<6} {host:<16} {name:<42}")
             
             # Controls
             print(f"\n{Colors.BOLD}{Colors.YELLOW}Controls:{Colors.RESET}")
-            print(f"  Up/Down: Navigate  |  Left/Right: Page  |  F: Filter  |  C: Clear Filters  |  V: View Details")
-            print(f"  S: Select for Verification  |  ESC: Back")
+            print(f"  Up/Down: Navigate  |  Enter: Select/Unselect CVE  |  Left/Right: Page")
+            print(f"  F: Filter  |  C: Clear Filters  |  V: View Details  |  S: Start Verification  |  ESC: Back")
             
             key = self._get_key()
             
@@ -451,17 +469,29 @@ class TerminalTUI:
                 current_vuln = min(len(filtered_vulns) - 1, current_vuln + 1)
                 if current_vuln >= end_idx:
                     current_page = min(total_pages - 1, current_page + 1)
+            elif key == 'ENTER':
+                # Toggle selection of current vulnerability
+                if current_vuln in self.selected_vulns:
+                    self.selected_vulns.remove(current_vuln)
+                else:
+                    self.selected_vulns.add(current_vuln)
             elif key == 'RIGHT':
                 current_page = min(total_pages - 1, current_page + 1)
             elif key == 'LEFT':
                 current_page = max(0, current_page - 1)
             elif key == 'F':
+                # Save current selections before filtering
+                old_filtered_vulns = filtered_vulns.copy()
                 filtered_vulns = self._apply_filter_ui(filtered_vulns)
+                # Remap selections after filtering
+                if filtered_vulns != old_filtered_vulns:
+                    self.selected_vulns = set()
                 current_vuln = 0
                 current_page = 0
             elif key == 'C':
                 filtered_vulns = self.current_vulns.copy()
                 self.active_filters = []
+                self.selected_vulns = set()
             elif key == 'V':
                 if filtered_vulns:
                     self._show_vuln_details(filtered_vulns[current_vuln])
@@ -609,17 +639,125 @@ class TerminalTUI:
     
     def _select_vulns_for_verification(self, vulns: List[Dict]):
         """Select vulnerabilities for verification"""
-        self._show_message("Saving selected vulnerabilities for verification...", "info")
+        # Only save selected vulnerabilities, not all filtered ones
+        if not self.selected_vulns:
+            self._show_message("No vulnerabilities selected! Please select at least one CVE with Enter key.", "error")
+            return
+        
+        # Get only the selected vulnerabilities
+        selected_vulns_list = [vulns[i] for i in sorted(self.selected_vulns) if i < len(vulns)]
+        
+        self._show_message(f"Saving {len(selected_vulns_list)} selected vulnerabilities for verification...", "info")
         
         # Save to file for verification workflow
         output_file = os.path.join(current_dir, 'data', 'selected_vulns_for_verification.json')
         try:
             with open(output_file, 'w') as f:
-                json.dump(vulns, f, indent=2)
+                json.dump(selected_vulns_list, f, indent=2)
             
-            self._show_message(f"Saved {len(vulns)} vulnerabilities to {output_file}", "success")
+            self._show_message(f"Saved {len(selected_vulns_list)} selected vulnerabilities", "success")
+            
+            # Ask if user wants to proceed with agent verification
+            if self._ask_yes_no(f"Start agent verification for {len(selected_vulns_list)} vulnerabilities?"):
+                self._run_agent_verification(output_file, selected_vulns_list)
+            
         except Exception as e:
             self._show_message(f"Error saving: {e}", "error")
+    
+    def _run_agent_verification(self, vuln_file: str, vulns: List[Dict]):
+        """Run agent verification on selected vulnerabilities"""
+        self._clear_screen()
+        print(f"{Colors.BOLD}🚀 Starting Vulnerability Verification{Colors.RESET}")
+        print("=" * 100)
+        
+        # Show scope summary
+        critical = len([v for v in vulns if v.get('s', 0) == 4])
+        high = len([v for v in vulns if v.get('s', 0) == 3])
+        medium = len([v for v in vulns if v.get('s', 0) == 2])
+        low = len([v for v in vulns if v.get('s', 0) == 1])
+        
+        print(f"\n{Colors.BOLD}📊 Verification Scope:{Colors.RESET}")
+        print(f"   Total targets: {len(vulns)}")
+        print(f"   🔴 Critical: {critical}")
+        print(f"   🟠 High: {high}")
+        print(f"   🟡 Medium: {medium}")
+        print(f"   🟢 Low: {low}")
+        
+        # Extract unique hosts and ports
+        hosts = sorted(list(set(v.get('h', '') for v in vulns if v.get('h', ''))))
+        ports = sorted(list(set(int(v.get('p', 0)) for v in vulns if v.get('p', 0))))
+        
+        print(f"\n{Colors.BOLD}🎯 Targets:{Colors.RESET}")
+        print(f"   Hosts: {', '.join(hosts[:5])}{'...' if len(hosts) > 5 else ''}")
+        print(f"   Ports: {', '.join(map(str, ports[:10]))}{'...' if len(ports) > 10 else ''}")
+        
+        # Show vulnerability details
+        print(f"\n{Colors.BOLD}🔍 Vulnerabilities to Verify:{Colors.RESET}")
+        print(f"{Colors.DIM}{'-' * 100}{Colors.RESET}")
+        print(f"{Colors.BOLD}{'#':<4} {'Severity':<10} {'CVE':<18} {'CVSS':<6} {'Port':<6} {'Host':<16} {'Name'[:30]:<32}{Colors.RESET}")
+        print(f"{Colors.DIM}{'-' * 100}{Colors.RESET}")
+        
+        # Show up to 15 vulnerabilities
+        severity_colors = {0: Colors.DIM, 1: Colors.WHITE, 2: Colors.YELLOW, 3: Colors.RED, 4: Colors.BOLD + Colors.RED}
+        severity_names = {0: "Info", 1: "Low", 2: "Medium", 3: "High", 4: "Critical"}
+        
+        display_count = min(15, len(vulns))
+        for i, vuln in enumerate(vulns[:display_count]):
+            severity = vuln.get('s', 0)
+            sev_color = severity_colors.get(severity, Colors.WHITE)
+            sev_name = severity_names.get(severity, "Unknown")
+            
+            cve = vuln.get('c', 'N/A')[:17]
+            cvss = vuln.get('cvss', 0.0)
+            port = vuln.get('p', 0)
+            host = vuln.get('h', 'N/A')[:15]
+            name = vuln.get('pn', 'Unknown')[:30]
+            
+            print(f"{i+1:<4} {sev_color}{sev_name:<10}{Colors.RESET} {cve:<18} {cvss:<6.1f} {port:<6} {host:<16} {name:<32}")
+        
+        if len(vulns) > display_count:
+            print(f"{Colors.DIM}... and {len(vulns) - display_count} more vulnerabilities{Colors.RESET}")
+        
+        print(f"{Colors.DIM}{'-' * 100}{Colors.RESET}")
+        
+        print(f"\n{Colors.YELLOW}⚠️  This will launch the intelligent pentesting agent{Colors.RESET}")
+        print(f"{Colors.YELLOW}   The agent will attempt to verify and exploit the selected vulnerabilities{Colors.RESET}")
+        
+        # Final confirmation
+        print(f"\n{Colors.BOLD}Press Enter to start, or ESC to cancel...{Colors.RESET}")
+        key = self._get_key()
+        
+        if key != 'ENTER':
+            self._show_message("Verification cancelled", "info")
+            return
+        
+        # Launch agent
+        try:
+            from apfa_agent.agent_mode import SmartTriageAgent
+            
+            print(f"\n{Colors.CYAN}🤖 Launching Smart Triage Agent...{Colors.RESET}")
+            print(f"{Colors.DIM}This may take several minutes...{Colors.RESET}\n")
+            
+            # Create agent with current configuration
+            config_path = os.path.join(current_dir, 'apfa_agent', 'config', 'agent_config.yaml')
+            agent = SmartTriageAgent(config_path=config_path, config=self.config_manager.config)
+            
+            # Run verification
+            print(f"{Colors.CYAN}Starting verification workflow...{Colors.RESET}")
+            agent.run(classified_json_path=vuln_file, nmap_results=None)
+            
+            print(f"\n{Colors.GREEN}✅ Verification completed successfully{Colors.RESET}")
+            print(f"Results saved to: {Colors.YELLOW}data/agent_results/{Colors.RESET}")
+            
+            print(f"\n{Colors.BOLD}Press Enter to continue...{Colors.RESET}")
+            input()
+            
+        except Exception as e:
+            print(f"\n{Colors.RED}❌ Agent execution failed: {e}{Colors.RESET}")
+            import traceback
+            traceback.print_exc()
+            print(f"\n{Colors.BOLD}Press Enter to continue...{Colors.RESET}")
+            input()
     
     def _ask_yes_no(self, question: str) -> bool:
         """Ask yes/no question"""
@@ -636,42 +774,56 @@ class TerminalTUI:
     
     def _show_settings(self):
         """Show settings screen with model selection"""
-        settings_items = [
-            ("Target IP", self.config_manager.config.get('target', {}).get('ip', '127.0.0.1')),
-            ("VM Check", str(self.config_manager.config.get('safety', {}).get('require_vm', True))),
-            ("LLM Model", "Select..."),
-            ("Save Settings", ""),
-            ("Back to Main Menu", "")
-        ]
-        
         current_setting = 0
         
         while self.running:
+            # Refresh settings items each loop to show updated values
+            target_ip = self.config_manager.config.get('target', {}).get('ip', '127.0.0.1')
+            vm_check = self.config_manager.config.get('safety', {}).get('require_vm', True)
+            vm_status = "✅ Enabled (Safe)" if vm_check else "❌ Disabled (Dangerous!)"
+            
+            settings_items = [
+                ("Target IP", target_ip),
+                ("VM Safety Check", vm_status, "Require running in VM/Container before exploits"),
+                ("LLM Model", "Select...", "Configure AI models for exploit generation"),
+                ("Save Settings", "", "Save all changes to config file"),
+                ("Back to Main Menu", "", "Return without saving changes")
+            ]
+            
             self._clear_screen()
             self._show_banner()
             
             width, _ = self._get_terminal_size()
-            settings_width = min(70, width - 4)
+            settings_width = min(80, width - 4)
             
             # Settings title
             print(f"\n{Colors.BOLD}{Colors.CYAN}{'=' * settings_width}{Colors.RESET}")
-            print(f"{Colors.BOLD}{Colors.CYAN}|| SETTINGS{Colors.RESET}{' ' * (settings_width - 11)}{Colors.BOLD}{Colors.CYAN}||{Colors.RESET}")
+            print(f"{Colors.BOLD}{Colors.CYAN}|| SETTINGS & CONFIGURATION{Colors.RESET}{' ' * (settings_width - 27)}{Colors.BOLD}{Colors.CYAN}||{Colors.RESET}")
             print(f"{Colors.BOLD}{Colors.CYAN}{'=' * settings_width}{Colors.RESET}")
+            print()
             
             # Settings items
-            for i, (label, value) in enumerate(settings_items):
+            for i, item_data in enumerate(settings_items):
+                label = item_data[0]
+                value = item_data[1]
+                description = item_data[2] if len(item_data) > 2 else ""
+                
                 if i == current_setting:
                     # Highlighted item
                     if value:
                         print(f"{Colors.REVERSE}{Colors.BOLD}  {label}: {value}{Colors.RESET}")
                     else:
                         print(f"{Colors.REVERSE}{Colors.BOLD}  {label}{Colors.RESET}")
+                    if description:
+                        print(f"  {Colors.CYAN}→ {description}{Colors.RESET}")
                 else:
                     # Normal item
                     if value:
                         print(f"  {label}: {Colors.GREEN}{value}{Colors.RESET}")
                     else:
                         print(f"  {Colors.YELLOW}{label}{Colors.RESET}")
+                    if description:
+                        print(f"  {Colors.DIM}{description}{Colors.RESET}")
                 print()
             
             # Instructions
@@ -718,12 +870,46 @@ class TerminalTUI:
                     self.config_manager.config['target'] = {}
                 self.config_manager.config['target']['ip'] = new_ip
                 
-        elif setting_index == 1:  # VM Check
+        elif setting_index == 1:  # VM Safety Check
             current = self.config_manager.config.get('safety', {}).get('require_vm', True)
-            new_value = not current
-            if 'safety' not in self.config_manager.config:
-                self.config_manager.config['safety'] = {}
-            self.config_manager.config['safety']['require_vm'] = new_value
+            
+            self._clear_screen()
+            print(f"{Colors.BOLD}VM Safety Check Configuration{Colors.RESET}")
+            print("=" * 60)
+            print(f"\nCurrent setting: {Colors.YELLOW}{'Enabled' if current else 'Disabled'}{Colors.RESET}")
+            print(f"\n{Colors.BOLD}What does this do?{Colors.RESET}")
+            print("  This setting requires the agent to run inside a VM/Container")
+            print("  before executing any exploit code. It protects your host system.")
+            print()
+            print(f"{Colors.GREEN}✅ Enabled (Recommended):{Colors.RESET}")
+            print("  - Agent will check if running in VM/Container")
+            print("  - Shows warning if not in VM")
+            print("  - Safer for production systems")
+            print()
+            print(f"{Colors.RED}❌ Disabled (Dangerous):{Colors.RESET}")
+            print("  - No VM check performed")
+            print("  - Exploits run on bare metal")
+            print("  - Only use in isolated test environments")
+            print()
+            
+            # Use regular input for this
+            import termios
+            import tty
+            fd = sys.stdin.fileno()
+            old_settings = termios.tcgetattr(fd)
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+            
+            choice = input(f"Enable VM Safety Check? (y/n) [{'y' if current else 'n'}]: ").strip().lower()
+            
+            if choice in ['y', 'n']:
+                new_value = (choice == 'y')
+                if 'safety' not in self.config_manager.config:
+                    self.config_manager.config['safety'] = {}
+                self.config_manager.config['safety']['require_vm'] = new_value
+                
+                status = "enabled" if new_value else "disabled"
+                print(f"\n{Colors.GREEN}VM Safety Check {status}!{Colors.RESET}")
+                time.sleep(1)
             
         elif setting_index == 2:  # LLM Model
             self._select_llm_model()
