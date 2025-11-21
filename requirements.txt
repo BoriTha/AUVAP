@@ -25,4 +25,7 @@ pytest-cov>=4.1.0
 # Utilities
 numpy>=1.24.0
 
+# TUI Framework
+textual>=0.41.0
+
 
